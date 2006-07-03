@@ -1,0 +1,14 @@
+Revision history for Perl extension SWISH::Filter.
+
+0.01    original version
+
+0.02    Swish-e version 2.4.3
+
+0.03    first CPAN release 15 June 2006
+        Peter Karman took over maintenance and made the following
+        changes:
+          * renamed S::F::Document and S::F::Base and split
+            them into their own files
+          * added the doc_class() method to S::F
+          * standardized the naming of the core Filters
+          * POD cleanup and clarifications

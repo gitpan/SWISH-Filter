@@ -1,0 +1,16 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+t/SWISH-Filter.t
+lib/SWISH/Filter.pm
+lib/SWISH/Filter/Document.pm
+lib/SWISH/Filters/Base.pm
+lib/SWISH/Filters/Doc2html.pm
+lib/SWISH/Filters/Doc2txt.pm
+lib/SWISH/Filters/ID3toHTML.pm
+lib/SWISH/Filters/IPTC2html.pm
+lib/SWISH/Filters/Pdf2HTML.pm
+lib/SWISH/Filters/XLtoHTML.pm
+lib/SWISH/Filters/pp2html.pm
+META.yml                                 Module meta-data (added by MakeMaker)
