@@ -21,3 +21,7 @@ Revision history for Perl extension SWISH::Filter.
         replaced test.doc with non-fast-saved version and removed comment in test
         fixed skip_filters routine in Filter.pm to use hash ref instead of hash
         added .ppt test file
+
+0.06	worked final (we hope) kinks out of make test, esp where Filters already installed
+
+

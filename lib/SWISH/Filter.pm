@@ -12,7 +12,7 @@ my $BaseFilterClass = 'SWISH::Filters::Base';
 
 use vars qw/ $VERSION %extra_methods /;
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 # Define the available parameters
 %extra_methods = map { $_ => 1 } qw/name user_data /;
@@ -467,6 +467,7 @@ sub create_filter_list
     my ($self, %attr) = @_;
 
     my @filters;
+    my %seen;
 
     # Look for filters to load
     for my $inc_path (@INC)
@@ -491,22 +492,22 @@ sub create_filter_list
             next if $self->{skip_filters}{$base};
 
             $self->mywarn(
-                         "\n>> Loading filter: [SWISH/Filters/${base}$suffix]");
+                         "\n>> Loading filter: [$path${base}$suffix]");
 
-            eval { require "SWISH/Filters/${base}$suffix" };
+            my $package = "SWISH::Filters::" . $base;
+            
+            next if $seen{$package}++;
+            
+            eval "require $package";
 
             if ($@)
             {
-                if ($ENV{FILTER_DEBUG})
-                {
-                    print STDERR
+                $self->mywarn(
                       "Failed to load 'SWISH/Filters/${base}$suffix'\n",
-                      '-+' x 40, "\n", $@, '-+' x 40, "\n";
-                }
+                      '-+' x 40, "\n", $@, '-+' x 40, "\n"
+                );
                 next;
             }
-
-            my $package = "SWISH::Filters::" . $base;
 
             # Provide a base class for each filter
             {
