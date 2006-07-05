@@ -4,7 +4,7 @@ use Carp;
 
 use vars qw/ $VERSION /;
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 =pod
 
@@ -33,7 +33,7 @@ some documents before passing on to another group for filtering.
 
 =cut
 
-sub type { 2 }
+sub type { $_[0]->{type} || 2 }
 
 =head2 priority
 
@@ -48,9 +48,11 @@ filtering MS Word files).  You might give the wvWare filter a lower priority num
 so it runs before the catdoc filter if both wvWare AND catdoc happen to be installed
 at the same time.
 
+A lower priority value is given preference over a higher priority value.
+
 =cut
 
-sub priority { 50 };    # default priority
+sub priority { $_[0]->{priority} || 50 }
 
 =head2 mimetypes
 

@@ -12,7 +12,7 @@ my $BaseFilterClass = 'SWISH::Filters::Base';
 
 use vars qw/ $VERSION %extra_methods /;
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 # Define the available parameters
 %extra_methods = map { $_ => 1 } qw/name user_data /;
@@ -214,7 +214,7 @@ sub ignore_filters
     @{$self->{ignore_filter_list}} = @$filters;
 
     # create lookup hash for filters to skip
-    $self->{skip_filters} = map { $_, 1 } @$filters;
+    $self->{skip_filters} = { map { $_, 1 } @$filters };
 }
 
 =head2 doc_class
@@ -606,7 +606,8 @@ test for those programs in its new() method.
 
 Filters also can define a type and priority.  These attributes are used
 to set the order filters are tested for a content-type match.  This allows
-you to have more than one filter that can work on the same content-type.
+you to have more than one filter that can work on the same content-type. A lower
+priority value is given preference over a higher priority value.
 
 If a filter calls die() then the filter is removed from the chain and will not be
 called again I<during the same run>.  Calling die when running with -S http or

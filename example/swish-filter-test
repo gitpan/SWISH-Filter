@@ -20,6 +20,9 @@ use strict;
 #
 #    $Id: swish-filter-test.in,v 1.7 2005/06/09 18:58:24 augur Exp $
 #
+#
+#   5 July 2006 - perl@peknet.com added --ignore_filters option
+#
 ####################################################################################
 
 use Getopt::Long;
@@ -37,7 +40,7 @@ my $skip_binary = 1;
 
 my $lines = 10;
 my $max_chars = 1000;
-
+my @ignore_filters = ();
 
 GetOptions(
         'verbose!'   => \$verbose,  # turn on INFO messages
@@ -51,6 +54,7 @@ GetOptions(
         'path'       => \$path,
         'depreciated'=> \$depreciated,
         'mimetypes'  => \$mimetypes,
+        'ignore_filters=s@' => \@ignore_filters
 
 ) || pod2usage(2);
 pod2usage( -verbose => 1 ) if $help;
@@ -75,7 +79,7 @@ $ENV{FILTER_DEBUG} = 1 if $verbose;  # used by SWISH::Filter
 
 msg(INFO, "SWISH::Filter found at [%s]\n", $INC{'SWISH/Filter.pm'} );
 
-my $filter = SWISH::Filter->new;
+my $filter = SWISH::Filter->new( ignore_filters=>\@ignore_filters );
 
 if ( $mimetypes ) {
     my @filters = $filter->filter_list;
@@ -136,7 +140,7 @@ EOF
 
     if ( my $filters_used = $doc->filters_used ) {
         for my $filter ( @$filters_used ) {
-            msg( DEBUG, "   >Filter used: $filter->{name} ( $filter->{start_content_type} -> $filter->{end_content_type} )" );
+            msg( DEBUG, "   >Filter used: $filter->{name}  ( $filter->{start_content_type} -> $filter->{end_content_type} )" );
          }
     }
 
@@ -273,15 +277,16 @@ swish-filter-test - program to test the SWISH::Filter module.
 swish-filter-test [options] <file or url>  <...>
 
  Options:
-   -quiet           don't generate messages to stderr
-   -content         output content to stdout
-   -(no)skip_binary skip output of binary files (default)
-   -lines <num>     Number of lines of content to display to stderr if verbose
-   -headers         output with headers for swish-e -S prog method
-   -verbose         enable $ENV{FILTER_DEBUG} for verbose output
-   -path            output @INC path to SWISH::Filter module
-   -help            brief help message
-   -man             full documentation
+   -quiet            don't generate messages to stderr
+   -content          output content to stdout
+   -(no)skip_binary  skip output of binary files (default)
+   -lines <num>      Number of lines of content to display to stderr if verbose
+   -headers          output with headers for swish-e -S prog method
+   -verbose          enable $ENV{FILTER_DEBUG} for verbose output
+   -path             output @INC path to SWISH::Filter module
+   -help             brief help message
+   -man              full documentation
+   -ignore <filter>  ignore <filter> in selecting a filter to use
 
 =head1 DESCRIPTION
 

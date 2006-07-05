@@ -15,3 +15,9 @@ Revision history for Perl extension SWISH::Filter.
 
 0.04    dump packaging error makes 0.03 fail 'make test' via CPAN
         0.04 is identical to 0.03 but includes missing example script
+
+0.05	added --ignore_filters option to swish-filter-test example
+        fixed type() and priority() base filter methods to actually work
+        replaced test.doc with non-fast-saved version and removed comment in test
+        fixed skip_filters routine in Filter.pm to use hash ref instead of hash
+        added .ppt test file

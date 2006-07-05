@@ -14,4 +14,10 @@ lib/SWISH/Filters/IPTC2html.pm
 lib/SWISH/Filters/Pdf2HTML.pm
 lib/SWISH/Filters/XLtoHTML.pm
 lib/SWISH/Filters/pp2html.pm
+lib/SWISH/Filters/ppt2txt.pm
+lib/SWISH/Filters/xls2txt.pm
+t/test.doc
+t/test.pdf
+t/test.ppt
+t/test.xls
 META.yml                                 Module meta-data (added by MakeMaker)
