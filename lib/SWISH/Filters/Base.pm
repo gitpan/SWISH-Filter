@@ -2,6 +2,10 @@ package SWISH::Filters::Base;
 use strict;
 use Carp;
 
+use vars qw/ $VERSION /;
+
+$VERSION = '0.01';
+
 =pod
 
 =head1 NAME

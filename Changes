@@ -12,3 +12,6 @@ Revision history for Perl extension SWISH::Filter.
           * added the doc_class() method to S::F
           * standardized the naming of the core Filters
           * POD cleanup and clarifications
+
+0.04    dump packaging error makes 0.03 fail 'make test' via CPAN
+        0.04 is identical to 0.03 but includes missing example script

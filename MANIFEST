@@ -2,6 +2,7 @@ Changes
 Makefile.PL
 MANIFEST
 README
+example/swish-filter-test
 t/SWISH-Filter.t
 lib/SWISH/Filter.pm
 lib/SWISH/Filter/Document.pm

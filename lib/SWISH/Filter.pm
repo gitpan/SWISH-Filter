@@ -12,7 +12,7 @@ my $BaseFilterClass = 'SWISH::Filters::Base';
 
 use vars qw/ $VERSION %extra_methods /;
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 # Define the available parameters
 %extra_methods = map { $_ => 1 } qw/name user_data /;

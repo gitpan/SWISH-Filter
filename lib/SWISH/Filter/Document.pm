@@ -4,7 +4,9 @@ use Carp;
 use File::Temp;
 use Symbol;
 
-use vars '$AUTOLOAD';
+use vars qw/ $VERSION $AUTOLOAD /;
+
+$VERSION = '0.01';
 
 # Map content types to swish-e parsers.
 
