@@ -6,7 +6,7 @@ use Symbol;
 
 use vars qw/ $VERSION $AUTOLOAD /;
 
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 # Map content types to swish-e parsers.
 
@@ -103,7 +103,10 @@ sub remove_temp_file
 {
     my $self = shift;
 
-    unlink delete $self->{temp_file} if $self->{temp_file};
+    unless ($ENV{FILTER_DEBUG})
+    {
+        unlink delete $self->{temp_file} if $self->{temp_file};
+    }
 }
 
 # Used for tracking what filter(s) were used in processing
@@ -247,7 +250,7 @@ This method is not normally used by end-users of SWISH::Filter.
 
 =cut
 
-# This will create a tempoary file if file is in memory
+# This will create a temporary file if file is in memory
 
 sub fetch_filename
 {
@@ -363,6 +366,20 @@ Example:
     }
 
 =cut
+
+=head2 metadata
+
+Get/set any meta data for the Document object. This would include any
+metadata returned from the filter() method in SWISH::Filter.
+
+=cut
+
+sub metadata
+{
+    my $self = shift;
+    $self->{metadata} = shift(@_) if @_;
+    return $self->{metadata};
+}
 
 sub AUTOLOAD
 {

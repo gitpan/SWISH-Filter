@@ -20,4 +20,8 @@ t/test.doc
 t/test.pdf
 t/test.ppt
 t/test.xls
+t/test.doc.gz
+t/test.pdf.gz
+t/test.ppt.gz
+t/test.xls.gz
 META.yml                                 Module meta-data (added by MakeMaker)

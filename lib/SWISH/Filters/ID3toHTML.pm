@@ -161,7 +161,7 @@ sub format_as_html {
     }
 
 
-    return <<EOF;
+    my $txt = <<EOF;
 <html>
  <head>
    <title>$title</title>
@@ -173,6 +173,8 @@ sub format_as_html {
   </body>
 </html>
 EOF
+
+    return($txt,$metadata);
 
 }
 

@@ -3,51 +3,60 @@ use strict;
 
 use vars qw/ $VERSION /;
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 
-sub new {
-    my ( $class ) = @_;
+sub new
+{
+    my ($class) = @_;
 
-    my $self = bless {
-        mimetypes   => [ qr!application/pdf! ],
-    }, $class;
+    my $self = bless {mimetypes => [qr!application/pdf!],}, $class;
 
-    return $self->set_programs( qw/ pdftotext pdfinfo / );
+    return $self->set_programs(qw/ pdftotext pdfinfo /);
 }
 
-sub filter {
-    my ( $self, $doc ) = @_;
+sub filter
+{
+    my ($self, $doc) = @_;
 
     my $user_data = $doc->user_data;
-    my $title_tag = $user_data->{pdf}{title_tag} if ref $user_data eq 'HASH';
+    my $title_tag =
+      ref $user_data eq 'HASH'
+      ? $user_data->{pdf}{title_tag}
+      : 'title';
 
-    my $file = $doc->fetch_filename;
-    my $metadata = $self->get_pdf_headers( $file );
+    my $file     = $doc->fetch_filename;
+    
+    $self->mywarn("Pdf2HTML handling $file");
+        
+    my $metadata = $self->get_pdf_headers($file);
 
-    my $headers = format_metadata( $metadata );
+    my $headers = format_metadata($metadata);
 
-    if ( $title_tag && exists $metadata->{ $title_tag } ) {
-        my $title = escapeXML( $metadata->{ $title_tag } );
+    if ($title_tag && exists $metadata->{$title_tag})
+    {
+        my $title = escapeXML($metadata->{$title_tag});
 
-        $headers = "<title>$title</title>\n" . $headers
+        $headers = "<title>$title</title>\n" . $headers;
     }
-
 
     # Check for encrypted content
 
     my $content_ref;
 
     # patch provided by Martial Chartoire
-    if ( $metadata->{encrypted} && $metadata->{encrypted} =~ /yes\.*\scopy:no\s\.*/i ) {
+    if (   $metadata->{encrypted}
+        && $metadata->{encrypted} =~ /yes\.*\scopy:no\s\.*/i)
+    {
         $content_ref = \'';
 
-    } else {
-        $content_ref = $self->get_pdf_content_ref( $file );
+    }
+    else
+    {
+        $content_ref = $self->get_pdf_content_ref($file);
     }
 
     # update the document's content type
-    $doc->set_content_type( 'text/html' );
-
+    $doc->set_content_type('text/html');
 
     my $txt = <<EOF;
 <html>
@@ -62,26 +71,26 @@ $$content_ref
 </html>
 EOF
 
-    return \$txt;
-
-
+    return(\$txt,$metadata);
 
 }
 
-sub get_pdf_headers {
+sub get_pdf_headers
+{
 
-    my ($self, $file ) = @_;
+    my ($self, $file) = @_;
 
     # We need a file name to pass to the pdf conversion programs
 
-
     my %metadata;
-    my $headers = $self->run_pdfinfo( $file );
+    my $headers = $self->run_pdfinfo($file);
     return \%metadata unless $headers;
 
-    for (split /\n/, $headers ) {
-        if ( /^\s*([^:]+):\s+(.+)$/ ) {
-            my ( $metaname, $value ) = ( lc( $1 ), $2 );
+    for (split /\n/, $headers)
+    {
+        if (/^\s*([^:]+):\s+(.+)$/)
+        {
+            my ($metaname, $value) = (lc($1), $2);
             $metaname =~ tr/ /_/;
             $metadata{$metaname} = $value;
         }
@@ -90,42 +99,43 @@ sub get_pdf_headers {
     return \%metadata;
 }
 
-sub format_metadata {
+sub format_metadata
+{
 
     my $metadata = shift;
 
     my $metas = join "\n", map {
-        qq[<meta name="$_" content="] . escapeXML( $metadata->{$_} ) . '">'; #'
+        qq[<meta name="$_" content="] . escapeXML($metadata->{$_}) . '">';    #'
     } sort keys %$metadata;
-
 
     return $metas;
 }
 
-sub get_pdf_content_ref {
-    my ( $self, $file )  = @_;
+sub get_pdf_content_ref
+{
+    my ($self, $file) = @_;
 
-    my $content = escapeXML( $self->run_pdftotext( $file, '-' ) );
+    my $content = escapeXML($self->run_pdftotext($file, '-'));
 
     return \$content;
 }
 
-
-
 # How are URLs printed with pdftotext?
-sub escapeXML {
+sub escapeXML
+{
 
-   my $str = shift;
+    my $str = shift;
 
-   return '' unless $str;
+    return '' unless $str;
 
-   for ( $str ) {
-       s/&/&amp;/go;
-       s/"/&quot;/go;
-       s/</&lt;/go;
-       s/>/&gt;/go;
+    for ($str)
+    {
+        s/&/&amp;/go;
+        s/"/&quot;/go;
+        s/</&lt;/go;
+        s/>/&gt;/go;
     }
-   return $str;
+    return $str;
 }
 
 1;
@@ -157,7 +167,7 @@ You may pass into SWISH::Filter's new method a tag to use as the html
     );
 
 Then if a PDF info tag of "title" is found that will be used as the HTML <title>.
-
+If no tag is passed, C<title> will be used as the default tag.
 
 
 =head1 AUTHOR

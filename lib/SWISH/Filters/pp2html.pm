@@ -1,7 +1,7 @@
 package SWISH::Filters::pp2html;
 use strict;
 use vars qw/ $VERSION /;
-$VERSION = '0.01';
+$VERSION = '0.02';
 require File::Spec;
 
 sub new {
@@ -20,10 +20,11 @@ sub filter {
    my ($title) = ( $content =~ m!<title>(.*?)</title>!io );
    my ($volume,$directories,$file) = File::Spec->splitpath( $title );
    $content =~ s,<title>.*?</title>,<title>$file</title>,i;
+   my $meta = { title => $file };
  
    # update the document's content type
    $doc->set_content_type( 'text/html' );
-   return \$content;
+   return(\$content,$meta);
 }
 
 1;

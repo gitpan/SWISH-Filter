@@ -114,7 +114,7 @@ be found.
 
 If all the programs listed in @I<program_list> are found
 and can be executed as the current user,
- set_programs() returns $self, so you can chain methods together.
+set_programs() returns $self, so you can chain methods together.
 
 For example, in your constructor you might do:
 

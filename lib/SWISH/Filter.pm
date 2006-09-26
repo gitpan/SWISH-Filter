@@ -12,7 +12,7 @@ my $BaseFilterClass = 'SWISH::Filters::Base';
 
 use vars qw/ $VERSION %extra_methods /;
 
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 # Define the available parameters
 %extra_methods = map { $_ => 1 } qw/name user_data /;
@@ -379,12 +379,12 @@ sub convert
         next unless $filter->can_filter_mimetype($doc_object->content_type);
 
         my $start_content_type = $doc_object->content_type;
-        my $filtered_doc;
+        my ($filtered_doc,$metadata);
 
         # run the filter
         eval {
             local $SIG{__DIE__};
-            $filtered_doc = $filter->filter($doc_object);
+            ($filtered_doc,$metadata) = $filter->filter($doc_object);
         };
 
         if ($@)
@@ -413,11 +413,14 @@ sub convert
                 end_content_type   => $doc_object->content_type,
               };
 
-            $doc_object->cur_doc($filtered_doc)
-              ;    # and save it (filename or reference)
+            # and save it (filename or reference)
+            $doc_object->cur_doc($filtered_doc);
+            $doc_object->metadata($metadata);
 
             # All done?
             last unless $doc_object->continue(0);
+            
+            $content_type = $doc_object->content_type;
         }
     }
 
@@ -573,8 +576,11 @@ sub can_filter
     return @filters;
 }
 
-#------------------------------------------------------
-# converts a file name to a mimetype
+=head2 decode_content_type( I<filename> )
+
+Returns MIME type for I<filename> if known.
+
+=cut
 
 sub decode_content_type
 {
@@ -588,7 +594,7 @@ sub decode_content_type
 =head1 WRITING FILTERS
 
 Filters are standard perl modules that are installed into the C<SWISH::Filters> name space.
-Filters are not complicated -- see the core SWISH::Fitlers::* modules for examples.
+Filters are not complicated -- see the core SWISH::Filters::* modules for examples.
 
 Each filter defines the content-types (or mimetypes) that it can handle.  These
 are specified as a list of regular expressions to match against the document's
@@ -621,7 +627,7 @@ data and then set $filter-E<gt>set_continue and let other filters process the
 document.
 
 
-A filter should define the following methods (required methods are indicated):
+A filter may define the following methods (required methods are indicated):
 
 =over 4
 
@@ -675,6 +681,10 @@ a content type match.
 If the document is filtered then the filter must set the new document's content
 type (if it changed) and return either a file name where the document can be found or
 a reference to a scalar containing the document.
+
+The filter() method may also return a second value for storing metadata. The value
+is typically a hash ref of name/value pairs. This value can then
+be accessed via the metadata() method in the SWISH::Filter::Document class.
 
 =item type()
 

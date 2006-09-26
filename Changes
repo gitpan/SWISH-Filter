@@ -24,4 +24,11 @@ Revision history for Perl extension SWISH::Filter.
 
 0.06	worked final (we hope) kinks out of make test, esp where Filters already installed
 
+0.07	added metadata() feature to Document class and updated Filters where applicable
+	added 'title' as default title_tag in Pdf2HTML
+        RT fix 20887
+        added SWISH::Filters::Decompress and associated t/*gz files
+
+
+
 

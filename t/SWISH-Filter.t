@@ -11,12 +11,12 @@ BEGIN { use_ok('SWISH::Filter') }
 
 diag("running the example script");
 
-ok(run("$^X example/swish-filter-test t/test.*"), "4 example docs");
+ok(run("$^X example/swish-filter-test --quiet --noskip_binary t/test.*"), "example docs");
 ok(
     run(
-        "$^X example/swish-filter-test --ignore XLtoHTML --ignore pp2html t/test.*"
+        "$^X example/swish-filter-test --quiet --noskip_binary --ignore XLtoHTML --ignore pp2html t/test.*"
        ),
-    "4 example docs using catdoc"
+    "example docs using catdoc"
   );
 
 sub run
