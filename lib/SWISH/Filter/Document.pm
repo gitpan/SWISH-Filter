@@ -398,12 +398,6 @@ Example:
 
 =cut
 
-sub meta_data
-{
-    my $self = shift;
-    $self->{meta_data} = shift(@_) if @_;
-    return $self->{meta_data};
-}
 
 sub AUTOLOAD
 {

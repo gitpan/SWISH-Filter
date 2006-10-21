@@ -121,7 +121,12 @@ sub process_doc
     eval { $uri = URI->new($file) };
     my %config = !$@ && $uri->scheme ? fetch_url($file) : fetch_file($file);
 
-    my $doc = $filter->convert(%config, name => $file,);
+    my $doc =
+      $filter->convert(
+                       %config,
+                       name      => $file,
+                       meta_data => {'convertedBy' => 'swish-filter-test'}
+                      );
 
     die "Failed to process document [$file]\n" unless $doc;
 

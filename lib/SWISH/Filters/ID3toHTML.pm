@@ -79,9 +79,9 @@ sub get_id3_content_ref
     $metadata{$_} = $user_meta->{$_} for keys %$user_meta;
 
     # HTML or bust
-    return %metadata
+    return(%metadata
       ? $self->format_as_html(\%metadata)
-      : $self->format_empty_doc($filename);
+      : $self->format_empty_doc($filename));
 }
 
 sub get_id3v1_tags

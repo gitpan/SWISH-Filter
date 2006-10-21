@@ -41,7 +41,7 @@ Revision history for Perl extension SWISH::Filter.
         added base filter() method to SWISH::Filters::Base which will croak if not overridden
         actually added SWISH::Filters::Decompress so it gets packaged... doh!
 
-
+0.09    fixed SWISH::Filter to actually set meta_data correctly, and SWISH::Filters::Decompress to pass it through
 
 
 

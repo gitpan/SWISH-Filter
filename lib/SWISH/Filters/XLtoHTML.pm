@@ -25,7 +25,7 @@ sub filter
     # We need a file name to pass to the conversion function
     my $file = $doc->fetch_filename;
 
-    my ($content_ref, $meta) = $self->get_xls_content_ref($file,$doc);
+    my ($content_ref, $meta) = $self->get_xls_content_ref($file, $doc);
 
     return unless $content_ref;
 
@@ -39,7 +39,7 @@ sub filter
 
 sub get_xls_content_ref
 {
-    my ($self,$file,$doc) = @_;
+    my ($self, $file, $doc) = @_;
 
     my $oExcel = Spreadsheet::ParseExcel->new;
     return unless $oExcel;
@@ -49,7 +49,7 @@ sub get_xls_content_ref
 
     # gather up all the workbook metadata
     my ($vol, $dirs, $filename) = File::Spec->splitpath($oBook->{File});
-    
+
     my $user_meta = $doc->meta_data || {};
 
     my %meta = (
@@ -58,7 +58,7 @@ sub get_xls_content_ref
                 Author     => $oBook->{Author} || '',
                 Sheetcount => $oBook->{SheetCount}
                );
-               
+
     $meta{$_} = $user_meta->{$_} for keys %$user_meta;
 
     my $title = join(' ',
@@ -71,7 +71,7 @@ sub get_xls_content_ref
                     '<title>' . $self->escapeXML($title) . '</title>',
                     $self->format_meta_headers(\%meta),
                     '</head>');
-                    
+
     $html .= "\n";
 
     # Here we collect content from each worksheet

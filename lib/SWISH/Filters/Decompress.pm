@@ -116,7 +116,7 @@ sub filter
     $doc->set_continue(1);
 
     # return the document
-    return ($buf);
+    return ($buf,$doc->meta_data);
 }
 
 1;

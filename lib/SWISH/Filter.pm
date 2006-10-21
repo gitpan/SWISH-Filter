@@ -12,10 +12,10 @@ my $BaseFilterClass = 'SWISH::Filters::Base';
 
 use vars qw/ $VERSION %extra_methods /;
 
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 # Define the available parameters
-%extra_methods = map { $_ => 1 } qw/name user_data /;
+%extra_methods = map { $_ => 1 } qw( meta_data name user_data );
 
 # For testing only
 
@@ -215,7 +215,7 @@ sub ignore_filters
     @{$self->{ignore_filter_list}} = @$filters;
 
     # create lookup hash for filters to skip
-    $self->{skip_filters} = { map { $_, 1 } @$filters };
+    $self->{skip_filters} = {map { $_, 1 } @$filters};
 }
 
 =head2 doc_class
@@ -278,6 +278,10 @@ And used in the filter as:
 
 It's up to the filter author to use a unique first-level hash key for a given filter.
 
+=item meta_data
+
+Optional data structure intended for meta name/content pairs for HTML
+or XML output. See SWISH::Filter::Document for discussion of this data.
 
 =back
 
@@ -335,40 +339,17 @@ sub convert
         $attr{name} ||= $doc;    # Set default name of document
     }
 
-    $self->mywarn("\n>> Starting to process new document: $attr{name} -> $content_type");
+    $self->mywarn(
+         "\n>> Starting to process new document: $attr{name} -> $content_type");
 
     ## Create a new document object
 
     my $doc_object = $self->doc_class->new($doc, $content_type);
     return unless $doc_object;    # fails on empty doc or doc not readable
 
-    local $SIG{__DIE__};
-    local $SIG{__WARN__};
-
-    # Look for left over config settings that we do not know about
-
-    for my $setting (keys %extra_methods)
-    {
-        next unless $attr{$setting};
-        my $method = "set_" . $setting;
-        $doc_object->$method(delete $attr{$setting});
-
-        # if given a document name then use that in error messages
-
-        if ($setting eq 'name')
-        {
-            $SIG{__DIE__} =
-              sub { die "$$ Error- ", $doc_object->name, ": ", @_ };
-            $SIG{__WARN__} =
-              sub { warn "$$ Warning - ", $doc_object->name, ": ", @_ };
-        }
-    }
-
-    warn "Unknown filter config setting '$_'\n" for keys %attr;
+    $self->_set_extra_methods($doc_object, {%attr});
 
     # Now run through the filters
-
-    my $done;
     for my $filter ($self->filter_list)
     {
 
@@ -378,12 +359,12 @@ sub convert
         next unless $filter->can_filter_mimetype($doc_object->content_type);
 
         my $start_content_type = $doc_object->content_type;
-        my ($filtered_doc,$metadata);
+        my ($filtered_doc, $metadata);
 
         # run the filter
         eval {
             local $SIG{__DIE__};
-            ($filtered_doc,$metadata) = $filter->filter($doc_object);
+            ($filtered_doc, $metadata) = $filter->filter($doc_object);
         };
 
         if ($@)
@@ -414,18 +395,53 @@ sub convert
 
             # and save it (filename or reference)
             $doc_object->cur_doc($filtered_doc);
-            $doc_object->meta_data($metadata);
+
+            # set meta_data explicitly since %attr only has what we originally had
+            $doc_object->set_meta_data($metadata);
+            delete $attr{'meta_data'};
 
             # All done?
             last unless $doc_object->continue(0);
-            
-            $content_type = $doc_object->content_type;
+
+            $self->_set_extra_methods($doc_object, {%attr});
+
+            $content_type = $doc_object->content_type();
         }
     }
 
     $doc_object->dump_filters_used if $ENV{FILTER_DEBUG};
 
     return $doc_object;
+
+}
+
+sub _set_extra_methods
+{
+    my ($self, $doc_object, $attr) = @_;
+
+    local $SIG{__DIE__};
+    local $SIG{__WARN__};
+
+    # Look for left over config settings that we do not know about
+
+    for my $setting (keys %extra_methods)
+    {
+        next unless $attr->{$setting};
+        my $method = "set_" . $setting;
+        $doc_object->$method(delete $attr->{$setting});
+
+        # if given a document name then use that in error messages
+
+        if ($setting eq 'name')
+        {
+            $SIG{__DIE__} =
+              sub { die "$$ Error- ", $doc_object->name, ": ", @_ };
+            $SIG{__WARN__} =
+              sub { warn "$$ Warning - ", $doc_object->name, ": ", @_ };
+        }
+    }
+
+    warn "Unknown filter config setting '$_'\n" for keys %$attr;
 
 }
 
@@ -487,30 +503,26 @@ sub create_filter_list
             my ($base, $path, $suffix) = fileparse($full_path, "\.pm");
 
             next if $base eq 'Base';    # our base class
-            
+
             next unless $suffix eq '.pm';
 
             # Should this filter be skipped?
             next if $self->{skip_filters}{$base};
 
             my $package = "SWISH::Filters::" . $base;
-            
+
             next if $seen{$package}++;
 
-            $self->mywarn(
-                         "\n>> Loading filter: [$path${base}$suffix]");
-            
+            $self->mywarn("\n>> Loading filter: [$path${base}$suffix]");
+
             eval "require $package";
 
             if ($@)
             {
-                $self->mywarn(
-                      "Failed to load 'SWISH/Filters/${base}$suffix'\n",
-                      '-+' x 40, "\n", $@, '-+' x 40, "\n"
-                );
+                $self->mywarn("Failed to load 'SWISH/Filters/${base}$suffix'\n",
+                              '-+' x 40, "\n", $@, '-+' x 40, "\n");
                 next;
             }
-            
 
             # Provide a base class for each filter
             {
@@ -521,16 +533,16 @@ sub create_filter_list
             my $filter = $package->new(%attr);
 
             $self->mywarn(
-                       " Error: filter [SWISH/Filters/${base}$suffix] not loaded\n")
+                   " Error: filter [SWISH/Filters/${base}$suffix] not loaded\n")
               unless $filter;
 
             next unless $filter;    # may not get installed
-            
+
             # cache ourselves in this filter for parent_filter()
-            
+
             $filter->{parent_filter} = $self;
 
-            push @filters, $filter; # save it in our list.
+            push @filters, $filter;    # save it in our list.
         }
     }
 
