@@ -38,101 +38,101 @@ use constant INFO  => 2;
 
 my $version = '0.02';
 
-my ( $verbose, $show_content, @file, @url, $help, $man, $quiet, $headers, $path, $depreciated, $mimetypes);
+my (
+    $verbose, $show_content, @file,  @url,
+    $help,    $man,          $quiet, $headers,
+    $path,    $depreciated,  $mimetypes
+   );
 
 my $skip_binary = 1;
 
-my $lines = 10;
-my $max_chars = 1000;
+my $lines          = 10;
+my $max_chars      = 1000;
 my @ignore_filters = ();
 
 GetOptions(
-        'verbose!'   => \$verbose,  # turn on INFO messages
-        'content!'   => \$show_content,
-        'quiet'      => \$quiet,
-        'lines=i'    => \$lines,
-        'help|?'     => \$help,
-        'man'        => \$man,
-        'headers'    => \$headers,
-        'skip_binary!' => \$skip_binary,
-        'path'       => \$path,
-        'depreciated'=> \$depreciated,
-        'mimetypes'  => \$mimetypes,
-        'ignore_filters=s@' => \@ignore_filters
+    'verbose!'          => \$verbose,         # turn on INFO messages
+    'content!'          => \$show_content,
+    'quiet'             => \$quiet,
+    'lines=i'           => \$lines,
+    'help|?'            => \$help,
+    'man'               => \$man,
+    'headers'           => \$headers,
+    'skip_binary!'      => \$skip_binary,
+    'path'              => \$path,
+    'depreciated'       => \$depreciated,
+    'mimetypes'         => \$mimetypes,
+    'ignore_filters=s@' => \@ignore_filters
 
-) || pod2usage(2);
-pod2usage( -verbose => 1 ) if $help;
-pod2usage( -verbose => 2 ) if $man;
+          ) || pod2usage(2);
+pod2usage(-verbose => 1) if $help;
+pod2usage(-verbose => 2) if $man;
 
-if ( $path ) {
-    print '/usr/local/lib/swish-e/perl',"\n";
+if ($path)
+{
+    print '/usr/local/lib/swish-e/perl', "\n";
     exit;
 }
 
-
-
 pod2usage(
-    -verbose => 0,
-    -message => "Must specify a file or URL",
-    -exitvar => 1,
-) unless @ARGV or $mimetypes;
+          -verbose => 0,
+          -message => "Must specify a file or URL",
+          -exitvar => 1,
+         )
+  unless @ARGV or $mimetypes;
 
+$ENV{FILTER_DEBUG} = 1 if $verbose;    # used by SWISH::Filter
 
+msg(INFO, "SWISH::Filter found at [%s]\n", $INC{'SWISH/Filter.pm'});
 
-$ENV{FILTER_DEBUG} = 1 if $verbose;  # used by SWISH::Filter
+my $filter = SWISH::Filter->new(ignore_filters => \@ignore_filters);
 
-msg(INFO, "SWISH::Filter found at [%s]\n", $INC{'SWISH/Filter.pm'} );
-
-my $filter = SWISH::Filter->new( ignore_filters=>\@ignore_filters );
-
-if ( $mimetypes ) {
+if ($mimetypes)
+{
     my @filters = $filter->filter_list;
     print "Mimetypes:\n\n";
-    for my $filter ( @filters ) {
+    for my $filter (@filters)
+    {
         print "  $filter:\n";
-        for my $pattern ( $filter->mimetypes ) {
-            print"     $pattern\n";
+        for my $pattern ($filter->mimetypes)
+        {
+            print "     $pattern\n";
         }
         print "\n";
     }
 }
 
-
 my $return = 0;
 
-for my $doc ( @ARGV ) {
-    eval { $depreciated ? process_doc_old( $doc ) : process_doc( $doc ) };
+for my $doc (@ARGV)
+{
+    eval { $depreciated ? process_doc_old($doc) : process_doc($doc) };
     $return = 1 if $@;
-    warn "** $0:\n  $@\n" if $@;  # always warn on die
+    warn "** $0:\n  $@\n" if $@;    # always warn on die
 }
 
 exit $return;
 
-sub process_doc {
+sub process_doc
+{
     my ($file) = @_;
 
-
     my $uri;
-    eval { $uri = URI->new( $file ) };
-    my %config = !$@ && $uri->scheme  ? fetch_url( $file ) : fetch_file( $file);
+    eval { $uri = URI->new($file) };
+    my %config = !$@ && $uri->scheme ? fetch_url($file) : fetch_file($file);
 
-
-    my $doc = $filter->convert(
-        %config,
-        name => $file,
-    );
+    my $doc = $filter->convert(%config, name => $file,);
 
     die "Failed to process document [$file]\n" unless $doc;
 
-    my $content_type = $doc->content_type || "unknown";
-    my $parser_type = $doc->swish_parser_type || '';
+    my $content_type = $doc->content_type      || "unknown";
+    my $parser_type  = $doc->swish_parser_type || '';
 
     my $binary = $doc->is_binary;
 
     my $msg = $doc->was_filtered ? '' : 'not';
 
-my $name = $doc->name;
-
+    my $name = $doc->name;
 
     msg(DEBUG, <<EOF );
 
@@ -142,27 +142,33 @@ Document $file was $msg filtered.
    Parser type:  $parser_type
 EOF
 
-    if ( my $filters_used = $doc->filters_used ) 
+    if (my $filters_used = $doc->filters_used)
     {
-        for my $filter ( @$filters_used ) 
+        for my $filter (@$filters_used)
         {
-            my $class = ref( $filter->{name} );
-            msg( DEBUG, "   >Filter used: $class  ( $filter->{start_content_type} -> $filter->{end_content_type} )" );
-            msg( DEBUG, "   >Metadata: " . Dumper( $doc->metadata || 'none') );
-         }
+            my $class = ref($filter->{name});
+            msg(DEBUG,
+                "   >Filter used: $class  ( $filter->{start_content_type} -> $filter->{end_content_type} )"
+               );
+            msg(DEBUG, "   >Metadata: " . Dumper($doc->meta_data || 'none'));
+        }
     }
 
-
-    if ( !$binary ) {
-        my @doc = split /\n/, substr( ${$doc->fetch_doc}, 0, $max_chars );
-        $lines = @doc-1 if $lines >= @doc;
-        msg(INFO, join "\n", '-- Output Content Sample --', @doc[0..$lines],'','-- end --','' );
+    if (!$binary)
+    {
+        my @doc = split /\n/, substr(${$doc->fetch_doc}, 0, $max_chars);
+        my $toshow = $lines;
+        $toshow = scalar(@doc) - 1 if $toshow >= @doc;
+        msg(INFO, join "\n",
+            '-- Output Content Sample --',
+            @doc[0 .. $toshow],
+            '', '-- end --', '');
     }
-
 
     die "Skipping binary [$file]\n" if $binary && $skip_binary;
 
-    if ($headers ) {
+    if ($headers)
+    {
         my $len = length ${$doc->fetch_doc};
 
         print "Path-Name: $file\nContent-Length: $len\n";
@@ -170,28 +176,22 @@ EOF
         print "\n";
     }
 
-
     print ${$doc->fetch_doc} if $show_content;
 }
 
-
-sub process_doc_old {
+sub process_doc_old
+{
     my ($file) = @_;
 
-
     my $uri;
-    eval { $uri = URI->new( $file ) };
-    my %config = !$@ && $uri->scheme  ? fetch_url( $file ) : fetch_file( $file);
+    eval { $uri = URI->new($file) };
+    my %config = !$@ && $uri->scheme ? fetch_url($file) : fetch_file($file);
 
+    my $was_filtered = $filter->filter(%config, name => $file,);
 
-    my $was_filtered = $filter->filter(
-        %config,
-        name => $file,
-    );
-
-    my $content_type = $filter->content_type || "unknown";
+    my $content_type      = $filter->content_type          || "unknown";
     my $orig_content_type = $filter->original_content_type || "unknown";
-    my $parser_type = $filter->swish_parser_type || '';
+    my $parser_type       = $filter->swish_parser_type     || '';
 
     my $binary = $content_type !~ m[^text/];
 
@@ -205,16 +205,20 @@ Document $file was $msg filtered.
    Parser type:  $parser_type
 EOF
 
-    if ( !$binary ) {
-        my @doc = split /\n/, substr( ${$filter->fetch_doc}, 0, $max_chars );
-        $lines = @doc-1 if $lines >= @doc;
-        msg(INFO, join "\n", '-- Output Content Sample --', @doc[0..$lines],'','-- end --','' );
+    if (!$binary)
+    {
+        my @doc = split /\n/, substr(${$filter->fetch_doc}, 0, $max_chars);
+        $lines = @doc - 1 if $lines >= @doc;
+        msg(INFO, join "\n",
+            '-- Output Content Sample --',
+            @doc[0 .. $lines],
+            '', '-- end --', '');
     }
-
 
     die "Skipping binary [$file]\n" if $binary && $skip_binary;
 
-    if ($headers ) {
+    if ($headers)
+    {
         my $len = length ${$filter->fetch_doc};
 
         print "Path-Name: $file\nContent-Length: $len\n";
@@ -222,57 +226,54 @@ EOF
         print "\n";
     }
 
-
     print ${$filter->fetch_doc} if $show_content;
 }
 
-sub fetch_file {
-   my $file = shift;
+sub fetch_file
+{
+    my $file = shift;
 
+    # just try to open for error reporting
+    open FH, "<$file" or die "Failed to open '$file': $!\n";
 
-   # just try to open for error reporting
-   open FH, "<$file" or die "Failed to open '$file': $!\n";
+    close FH;
 
-   close FH;
-
-   die "File '$file' has zero size\n" if -z $file;
-   return ( document => $file );
+    die "File '$file' has zero size\n" if -z $file;
+    return (document => $file);
 
 }
 
-
-sub fetch_url {
+sub fetch_url
+{
     my $url = shift;
 
     eval { require LWP::UserAgent };
     die "LWP::UserAgent is required to fetch a URL\n$@\n" if $@;
 
-    my $ua = LWP::UserAgent->new;
-    my $request = HTTP::Request->new('GET', $url );
-    my $response = $ua->request( $request );
-    die sprintf "Error while getting '%s'.  Server returned %s.", $response->request->uri,$response->status_line
-        unless $response->is_success;
+    my $ua       = LWP::UserAgent->new;
+    my $request  = HTTP::Request->new('GET', $url);
+    my $response = $ua->request($request);
+    die sprintf "Error while getting '%s'.  Server returned %s.",
+      $response->request->uri, $response->status_line
+      unless $response->is_success;
 
-    my $content = $response->content;
+    my $content      = $response->content;
     my $content_type = $response->content_type;
 
     return (
-        document => \$content,
-        content_type => $content_type,
-    );
+            document     => \$content,
+            content_type => $content_type,
+           );
 }
 
-
-
-sub msg {
+sub msg
+{
     my $msg_level = shift;
 
     return if $quiet;
     return if !$verbose && $msg_level > DEBUG;
-    printf( STDERR @_), print STDERR "\n";
+    printf(STDERR @_), print STDERR "\n";
 }
-
-
 
 __END__
 

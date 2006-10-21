@@ -16,10 +16,14 @@ lib/SWISH/Filters/XLtoHTML.pm
 lib/SWISH/Filters/pp2html.pm
 lib/SWISH/Filters/ppt2txt.pm
 lib/SWISH/Filters/xls2txt.pm
+lib/SWISH/Filters/Decompress.pm
 t/test.doc
 t/test.pdf
 t/test.ppt
 t/test.xls
+t/test.mp3
+t/test.txt
+t/test.zip
 t/test.doc.gz
 t/test.pdf.gz
 t/test.ppt.gz

@@ -367,18 +367,42 @@ Example:
 
 =cut
 
-=head2 metadata
+=head2 meta_data
 
-Get/set any meta data for the Document object. This would include any
-metadata returned from the filter() method in SWISH::Filter.
+Similar to user_data() but specifically intended for name/value pairs
+in the C<meta> tags in HTML or XML documents.
+
+If set, either via new() or explicitly via the meta_data() method,
+the value of meta_data() can be used in a filter to set meta headers.
+
+The value of meta_data() should be a hash ref so that it is easy to pass
+to SWISH::Filters::Base->format_meta_headers().
+
+After a document is filtered, the meta_data() method can be used to retrieve
+the values that the filter inserted into the filtered document. This value is
+(again) a hash ref, and is set by the SWISH::Filter module if the filter()
+method returns a second value.  Because the filter module might also extract
+meta data from the document itself, and might insert some of its own, it is up
+to the individual filter to determine how and what it handles meta data.
+See SWISH::Filters::Pdf2HTML for an example.
+
+See the filter() method description in SWISH::Filter, the section on WRITING FILTERS.
+
+Example:
+
+ my $doc = $filter->convert( meta_data => {foo => 'bar'} );
+ my $meta = $doc->meta_data;
+ # $meta *probably* is {foo => 'bar'} but that's up to how the filter handled
+ # the value passed in convert(). Could also be { foo => 'bar', title => 'some title' }
+ # for example.
 
 =cut
 
-sub metadata
+sub meta_data
 {
     my $self = shift;
-    $self->{metadata} = shift(@_) if @_;
-    return $self->{metadata};
+    $self->{meta_data} = shift(@_) if @_;
+    return $self->{meta_data};
 }
 
 sub AUTOLOAD

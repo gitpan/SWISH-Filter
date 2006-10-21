@@ -1,9 +1,9 @@
 package SWISH::Filters::XLtoHTML;
 use strict;
 require File::Spec;
-use vars qw/ $VERSION /;
+use vars qw( $VERSION );
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 sub new
 {
@@ -14,7 +14,7 @@ sub new
             mimetypes => [qr!application/vnd.ms-excel!, qr!application/excel!,],
             }, $class;
 
-    return $self->use_modules(qw/ Spreadsheet::ParseExcel  HTML::Entities /);
+    return $self->use_modules(qw( Spreadsheet::ParseExcel ));
 
 }
 
@@ -25,8 +25,8 @@ sub filter
     # We need a file name to pass to the conversion function
     my $file = $doc->fetch_filename;
 
-    my ($content_ref, $meta) = get_xls_content_ref($file);
-    
+    my ($content_ref, $meta) = $self->get_xls_content_ref($file,$doc);
+
     return unless $content_ref;
 
     # update the document's content type
@@ -39,7 +39,7 @@ sub filter
 
 sub get_xls_content_ref
 {
-    my $file = shift;
+    my ($self,$file,$doc) = @_;
 
     my $oExcel = Spreadsheet::ParseExcel->new;
     return unless $oExcel;
@@ -47,38 +47,32 @@ sub get_xls_content_ref
     my $oBook = $oExcel->Parse($file) || return;
     my ($iR, $iC, $oWkS, $oWkC, $ExcelWorkBook);
 
-    # Here we gather up all the workbook metadata
-
+    # gather up all the workbook metadata
     my ($vol, $dirs, $filename) = File::Spec->splitpath($oBook->{File});
-    my $ExcelFilename   = encode_entities($filename);
-    my $ExcelSheetCount = encode_entities($oBook->{SheetCount});
-    my $ExcelAuthor     = encode_entities($oBook->{Author} || '');
-    my $ExcelVersion    = encode_entities($oBook->{Version} || '');
-
-    # Name of the first worksheet
-    my $ExcelFirstWorksheetName =
-      encode_entities($oBook->{Worksheet}[0]->{Name});
+    
+    my $user_meta = $doc->meta_data || {};
 
     my %meta = (
-         'title' => "$ExcelFirstWorksheetName - $ExcelFilename v.$ExcelVersion",
-         'Filename'   => $ExcelFilename,
-         'Version'    => $ExcelVersion,
-         'Author'     => $ExcelAuthor,
-         'Sheetcount' => $ExcelSheetCount
-    );
+                Filename   => $filename,
+                Version    => $oBook->{Version} || '',
+                Author     => $oBook->{Author} || '',
+                Sheetcount => $oBook->{SheetCount}
+               );
+               
+    $meta{$_} = $user_meta->{$_} for keys %$user_meta;
 
-    my $ReturnValue = <<EOF;
-<html>
-<head>
-    <title>$meta{title}</title>
-EOF
+    my $title = join(' ',
+                     $oBook->{Worksheet}[0]->{Name},
+                     $filename, 'v.' . $meta{Version});
 
-    for my $n (grep { $_ ne 'title' } keys %meta)
-    {
-        $ReturnValue .= qq(    <meta name="$n" content="$meta{$n}">\n);
-    }
-
-    $ReturnValue .= "</head>\n";
+    my $html = join("\n",
+                    '<html>',
+                    '<head>',
+                    '<title>' . $self->escapeXML($title) . '</title>',
+                    $self->format_meta_headers(\%meta),
+                    '</head>');
+                    
+    $html .= "\n";
 
     # Here we collect content from each worksheet
     for (my $iSheet = 0 ; $iSheet < $oBook->{SheetCount} ; $iSheet++)
@@ -89,7 +83,7 @@ EOF
 
         # Name of the worksheet
         my $ExcelWorkSheet =
-          "<h2>" . encode_entities($oWkS->{Name}) . "</h2>\n";
+          "<h2>" . $self->escapeXML($oWkS->{Name}) . "</h2>\n";
         $ExcelWorkSheet .= "<table>\n";
 
         for (my $iR = $oWkS->{MinRow} ;
@@ -108,7 +102,7 @@ EOF
                 # For each cell do the following
                 $oWkC = $oWkS->{Cells}[$iR][$iC];
 
-                my $CellData = encode_entities($oWkC->Value) if ($oWkC);
+                my $CellData = $self->escapeXML($oWkC->Value) if ($oWkC);
                 $ExcelWorkSheet .= "\t<td>" . $CellData . "</td>\n"
                   if $CellData;
             }
@@ -121,15 +115,17 @@ EOF
         $ExcelWorkBook .= "</table>\n";
     }
 
-    $ReturnValue .= <<EOF;
+    $html .= <<EOF;
 <body>
 $ExcelWorkBook
 </body>
 </html>
 EOF
 
+    # include title in meta for return
+    $meta{title} = $title;
 
-    return ($ReturnValue, \%meta);
+    return ($html, \%meta);
 }
 
 __END__
@@ -142,11 +138,7 @@ SWISH::Filters::XLtoHTML - MS Excel to HTML filter module
 
 SWISH::Filters::XLtoHTML extracts data from MS Excel spreadsheets for indexing.
 
-Depends on two perl modules:
-
-    Spreadsheet::ParseExcel
-    HTML::Entities;
-
+Depends on Spreadsheet::ParseExcel from CPAN.
 
 =head1 SUPPORT
 

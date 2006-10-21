@@ -1,5 +1,15 @@
-SWISH-Filter version 0.03
+SWISH-Filter
 =========================
+
+ABOUT
+
+SWISH::Filter is a suite of modules for converting multiple formats
+into HTML, XML or plain text. It is intended for use with Swish-e
+but can be used all on its own.
+
+SWISH::Filter relies on MIME types to call pluggable filter modules,
+which may in turn call external programs to perform the actual filtering.
+SWISH::Filters::Base defines an API for writing your own filters.
 
 INSTALLATION
 
@@ -27,8 +37,8 @@ COPYRIGHT AND LICENCE
 
 Copyright (C) 2006 by Bill Moseley
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.8.7 or,
-at your option, any later version of Perl 5 you may have available.
+Current maintained by Peter Karman perl@peknet.com
 
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 

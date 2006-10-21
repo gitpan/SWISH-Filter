@@ -1,33 +1,43 @@
 package SWISH::Filters::Doc2html;
 use strict;
 
-use vars qw/ $VERSION /;
+use vars qw( $VERSION );
 
+$VERSION = '0.03';
 
-$VERSION = '0.02';
+sub new
+{
+    my ($class) = @_;
 
+    my $self = bless {mimetypes => [qr!application/(x-)?msword!],}, $class;
 
-sub new {
-    my ( $class ) = @_;
-
-    my $self = bless {
-        mimetypes   => [ qr!application/(x-)?msword! ], # list of types this filter handles
-    }, $class;
-
-    return $self->set_programs( 'wvWare' );
+    return $self->set_programs('wvWare');
 }
 
-sub filter {
-    my ( $self, $doc ) = @_;
+sub filter
+{
+    my ($self, $doc) = @_;
 
     # Grab output from running program
-    my $content = $self->run_wvWare( "-1", $doc->fetch_filename ) || return;
+    my $content = $self->run_wvWare("-1", $doc->fetch_filename) || return;
+
+    my $meta    = $doc->meta_data || {};
+    my $headers = $self->format_meta_headers($meta);
+
+    if ($content =~ m/<head>/i)
+    {
+        $content =~ s/<head>/<head>$headers/i;
+    }
+    else
+    {
+        $content =~ s/<title>/$headers\n<title>/i;
+    }
 
     # update the document's content type
-    $doc->set_content_type( 'text/html' );
+    $doc->set_content_type('text/html');
 
     # return the document
-    return \$content;
+    return (\$content, $meta);
 }
 1;
 

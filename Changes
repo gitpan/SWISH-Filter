@@ -29,6 +29,20 @@ Revision history for Perl extension SWISH::Filter.
         RT fix 20887
         added SWISH::Filters::Decompress and associated t/*gz files
 
+0.08    changed metadata() to meta_data() and added ability to set it in convert()
+        thorough audit of all Filters to improve syntax and formatting
+        removed dependency on HTML::Entities (and thus HTML::Parser) by moving
+           escapeXML() into SWISH::Filters::Base
+        moved format_meta_headers() into SWISH::Filters::Base
+        added test.mp3 to test files
+        fixed SWISH::Filters::Decompress to correctly set MIME types using SWISH::Filter
+           instead of File::Type
+        added parent_filter() method to SWISH::Filters::Base
+        added base filter() method to SWISH::Filters::Base which will croak if not overridden
+        actually added SWISH::Filters::Decompress so it gets packaged... doh!
+
+
+
 
 
 

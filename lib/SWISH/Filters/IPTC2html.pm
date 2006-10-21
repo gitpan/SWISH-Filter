@@ -1,9 +1,9 @@
 package SWISH::Filters::IPTC2html;
 use strict;
-use vars qw/ $VERSION /;
+use vars qw( $VERSION );
 use Image::IPTCInfo;
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 sub new
 {
@@ -23,15 +23,25 @@ sub filter
     my ($self, $doc) = @_;
     my $file = $doc->fetch_filename;
 
+    my $user_meta = $doc->meta_data || {};
+
     # Create new info object
-    my $info = new Image::IPTCInfo($file);
+    my $info = Image::IPTCInfo->new($file);
 
     # Check if file had IPTC data
-    unless (defined($info)) { return; }
+    return unless defined($info);
 
     # Get specific attributes...
     my $caption = $info->Attribute('caption/abstract');
-    my $headers = "<title>$caption</title>\n";
+
+    # does it need escaping? silly test
+    if ($caption =~ m/[<>&]/)
+    {
+        $caption = $self->escapeXML($caption);
+    }
+
+    my $headers =
+      "<title>$caption</title>\n" . $self->format_meta_headers($user_meta);
 
     # update the document's content type
     # uncommented set_content_type() to fix RT bug #20887
@@ -50,7 +60,13 @@ $xml
 </html>
 EOF
 
-    return (\$txt, {title => $caption});
+    return (
+            \$txt,
+            {
+             title => $caption,
+             map { $_ => $user_meta->{$_} } keys %$user_meta
+            }
+           );
 }
 
 1;
@@ -67,7 +83,7 @@ to extract meta-data into html for indexing by Swish-e.
 
 This filter plug-in requires the Image::IPTC package available at:
 
- http://search.cpan.org/~jcarter/Image-IPTCInfo-1.9/IPTCInfo.pm
+ http://search.cpan.org/~jcarter/
 
 =head1 AUTHOR
 

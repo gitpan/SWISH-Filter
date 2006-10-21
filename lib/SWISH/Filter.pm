@@ -12,7 +12,7 @@ my $BaseFilterClass = 'SWISH::Filters::Base';
 
 use vars qw/ $VERSION %extra_methods /;
 
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 # Define the available parameters
 %extra_methods = map { $_ => 1 } qw/name user_data /;
@@ -186,6 +186,7 @@ sub new
 my %mime_types = (
                   doc  => 'application/msword',
                   pdf  => 'application/pdf',
+                  ppt  => 'application/vnd.ms-powerpoint',
                   html => 'text/html',
                   htm  => 'text/html',
                   txt  => 'text/plain',
@@ -303,8 +304,6 @@ sub convert
 
     my $content_type = delete $attr{content_type};
 
-    # Allow a reference to a file name (where is this used??)
-
     if (ref $content_type)
     {
         my $type = $self->decode_content_type($$content_type);
@@ -336,7 +335,7 @@ sub convert
         $attr{name} ||= $doc;    # Set default name of document
     }
 
-    $self->mywarn("\n>> Starting to process new document: $content_type");
+    $self->mywarn("\n>> Starting to process new document: $attr{name} -> $content_type");
 
     ## Create a new document object
 
@@ -415,7 +414,7 @@ sub convert
 
             # and save it (filename or reference)
             $doc_object->cur_doc($filtered_doc);
-            $doc_object->metadata($metadata);
+            $doc_object->meta_data($metadata);
 
             # All done?
             last unless $doc_object->continue(0);
@@ -488,18 +487,18 @@ sub create_filter_list
             my ($base, $path, $suffix) = fileparse($full_path, "\.pm");
 
             next if $base eq 'Base';    # our base class
-
+            
             next unless $suffix eq '.pm';
 
             # Should this filter be skipped?
             next if $self->{skip_filters}{$base};
 
-            $self->mywarn(
-                         "\n>> Loading filter: [$path${base}$suffix]");
-
             my $package = "SWISH::Filters::" . $base;
             
             next if $seen{$package}++;
+
+            $self->mywarn(
+                         "\n>> Loading filter: [$path${base}$suffix]");
             
             eval "require $package";
 
@@ -511,6 +510,7 @@ sub create_filter_list
                 );
                 next;
             }
+            
 
             # Provide a base class for each filter
             {
@@ -521,10 +521,14 @@ sub create_filter_list
             my $filter = $package->new(%attr);
 
             $self->mywarn(
-                       ":-( Filter [SWISH/Filters/${base}$suffix] not loaded\n")
+                       " Error: filter [SWISH/Filters/${base}$suffix] not loaded\n")
               unless $filter;
 
             next unless $filter;    # may not get installed
+            
+            # cache ourselves in this filter for parent_filter()
+            
+            $filter->{parent_filter} = $self;
 
             push @filters, $filter; # save it in our list.
         }
@@ -684,7 +688,7 @@ a reference to a scalar containing the document.
 
 The filter() method may also return a second value for storing metadata. The value
 is typically a hash ref of name/value pairs. This value can then
-be accessed via the metadata() method in the SWISH::Filter::Document class.
+be accessed via the meta_data() method in the SWISH::Filter::Document class.
 
 =item type()
 

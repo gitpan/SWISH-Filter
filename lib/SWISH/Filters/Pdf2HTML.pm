@@ -1,9 +1,9 @@
 package SWISH::Filters::Pdf2HTML;
 use strict;
 
-use vars qw/ $VERSION /;
+use vars qw( $VERSION );
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 sub new
 {
@@ -24,17 +24,21 @@ sub filter
       ? $user_data->{pdf}{title_tag}
       : 'title';
 
-    my $file     = $doc->fetch_filename;
-    
+    my $user_meta = $doc->meta_data || {};
+    my $file      = $doc->fetch_filename;
+
     $self->mywarn("Pdf2HTML handling $file");
-        
+
     my $metadata = $self->get_pdf_headers($file);
 
-    my $headers = format_metadata($metadata);
+    # merge pdf meta with meta we inherited, preferring user meta
+    $metadata->{$_} = $user_meta->{$_} for keys %$user_meta;
+
+    my $headers = $self->format_meta_headers($metadata);
 
     if ($title_tag && exists $metadata->{$title_tag})
     {
-        my $title = escapeXML($metadata->{$title_tag});
+        my $title = $self->escapeXML($metadata->{$title_tag});
 
         $headers = "<title>$title</title>\n" . $headers;
     }
@@ -71,7 +75,7 @@ $$content_ref
 </html>
 EOF
 
-    return(\$txt,$metadata);
+    return (\$txt, $metadata);
 
 }
 
@@ -99,43 +103,13 @@ sub get_pdf_headers
     return \%metadata;
 }
 
-sub format_metadata
-{
-
-    my $metadata = shift;
-
-    my $metas = join "\n", map {
-        qq[<meta name="$_" content="] . escapeXML($metadata->{$_}) . '">';    #'
-    } sort keys %$metadata;
-
-    return $metas;
-}
-
 sub get_pdf_content_ref
 {
     my ($self, $file) = @_;
 
-    my $content = escapeXML($self->run_pdftotext($file, '-'));
+    my $content = $self->escapeXML($self->run_pdftotext($file, '-'));
 
     return \$content;
-}
-
-# How are URLs printed with pdftotext?
-sub escapeXML
-{
-
-    my $str = shift;
-
-    return '' unless $str;
-
-    for ($str)
-    {
-        s/&/&amp;/go;
-        s/"/&quot;/go;
-        s/</&lt;/go;
-        s/>/&gt;/go;
-    }
-    return $str;
 }
 
 1;

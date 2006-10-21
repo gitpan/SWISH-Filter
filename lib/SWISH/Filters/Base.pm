@@ -2,9 +2,9 @@ package SWISH::Filters::Base;
 use strict;
 use Carp;
 
-use vars qw/ $VERSION /;
+use vars qw( $VERSION );
 
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 =pod
 
@@ -20,6 +20,30 @@ when writing your new() constructor.
 
 
 =head1 METHODS
+
+=head2 filter
+
+You B<must> override this method in your filter subclass.
+
+=cut
+
+sub filter
+{
+    my $class = ref(shift(@_)); 
+    croak "$class must implement a filter() method" 
+}
+
+=head2 parent_filter
+
+Returns the SWISH::Filter object used to invoke your filter. Useful if you need to get
+a subsequent MIME type, for example. See SWISH::Filters::Decompress for an example.
+
+=cut
+
+sub parent_filter
+{
+    return $_[0]->{parent_filter};
+}
 
 =head2 type
 
@@ -221,6 +245,7 @@ sub find_binary
 
 sub get_libexec
 {
+
     # karman changed to return just 'swish-e' and rely on PATH to find it
     return 'swish-e';
 }
@@ -355,6 +380,61 @@ sub windows_fork
     $self->{pid} = $pid;
 
     return $rdrfh;
+}
+
+=head2 escapeXML( I<string> )
+
+Escapes the 5 primary XML characters & < > ' and ", plus all ASCII control
+characters. Returns the escaped string.
+
+=cut
+
+sub escapeXML
+{
+    my $self = shift;
+    my $str  = shift;
+
+    return '' unless defined $str;
+    
+    $str =~ s/[\x00-\x1f]/\n/go;    # converts all low chars to LF
+    
+    for ($str)
+    {
+        s/&/&amp;/go;
+        s/"/&quot;/go;
+        s/</&lt;/go;
+        s/>/&gt;/go;
+        s/'/&apos;/go;
+    }
+    return $str;
+}
+
+=head2 format_meta_headers( I<meta_hash_ref> )
+
+Returns XHTML-compliant C<meta> tags as a scalar, suitable for inserting into the C<head>
+tagset of HTML or anywhere in an XML doc.
+
+I<meta_hash_ref> should be a hash ref of name/content pairs. Both name and content
+will be run through escapeXML for you, so do B<not> escape them yourself or you
+run the risk of double-escaped text.
+
+=cut
+
+sub format_meta_headers
+{
+    my $self = shift;
+    my $m = shift or croak "need meta hash ref";
+    croak "$m is not a hash ref" unless ref $m and ref $m eq 'HASH';
+
+    my $metas = join "\n", map {
+            '<meta name="'
+          . $self->escapeXML($_)
+          . '" content="'
+          . $self->escapeXML($m->{$_}) . '"/>';
+
+    } sort keys %$m;
+
+    return $metas;
 }
 
 1;
