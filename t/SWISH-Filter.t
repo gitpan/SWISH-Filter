@@ -4,6 +4,8 @@
 use Test::More tests => 3;
 BEGIN { use_ok('SWISH::Filter') }
 
+diag("testing SWISH::Filter version $SWISH::Filter::VERSION");
+
 #
 #   we can't test actual filtering since it relies on many other apps
 #   but we can test that our modules load and look for those other apps

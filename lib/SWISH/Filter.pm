@@ -12,7 +12,7 @@ my $BaseFilterClass = 'SWISH::Filters::Base';
 
 use vars qw/ $VERSION %extra_methods /;
 
-$VERSION = '0.09';
+$VERSION = '0.10';
 
 # Define the available parameters
 %extra_methods = map { $_ => 1 } qw( meta_data name user_data );
@@ -572,6 +572,8 @@ Returns an array of filters that can handle this type of document
 
 =cut
 
+my %can_filter = ();    # cache to avoid testing every time
+
 sub can_filter
 {
     my ($self, $content_type) = @_;
@@ -584,9 +586,20 @@ sub can_filter
         return;
     }
 
+    return ()
+      if exists $can_filter{$content_type} && !$can_filter{$content_type};
+
     for my $filter ($self->filter_list)
     {
-        push @filters, $filter if $filter->can_filter_mimetype($content_type);
+        if ($filter->can_filter_mimetype($content_type))
+        {
+            push @filters, $filter;
+            $can_filter{$content_type}++;
+        }
+        else
+        {
+            $can_filter{$content_type} = 0;
+        }
     }
 
     return @filters;

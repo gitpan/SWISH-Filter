@@ -43,6 +43,7 @@ Revision history for Perl extension SWISH::Filter.
 
 0.09    fixed SWISH::Filter to actually set meta_data correctly, and SWISH::Filters::Decompress to pass it through
 
-
+0.10    cache can_filter() to avoid regexp check against all filters each time
+        add missing deps to Makefile.PL
 
 
