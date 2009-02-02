@@ -3,7 +3,7 @@ use strict;
 require File::Spec;
 use vars qw( $VERSION );
 
-$VERSION = '0.04';
+$VERSION = '0.11';
 
 sub new
 {

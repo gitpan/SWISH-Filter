@@ -1,7 +1,7 @@
 package SWISH::Filters::pp2html;
 use strict;
 use vars qw( $VERSION );
-$VERSION = '0.03';
+$VERSION = '0.11';
 require File::Spec;
 
 sub new

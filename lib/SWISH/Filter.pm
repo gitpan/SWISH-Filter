@@ -12,7 +12,7 @@ my $BaseFilterClass = 'SWISH::Filters::Base';
 
 use vars qw/ $VERSION %extra_methods /;
 
-$VERSION = '0.10';
+$VERSION = '0.11';
 
 # Define the available parameters
 %extra_methods = map { $_ => 1 } qw( meta_data name user_data );
@@ -193,6 +193,8 @@ my %mime_types = (
                   text => 'text/plain',
                   xml  => 'text/xml',
                   mp3  => 'audio/mpeg',
+                  gz   => 'application/x-gzip',
+                  xls  => 'application/vnd.ms-excel',
                  );
 
 sub mimeTypeOf
@@ -749,7 +751,7 @@ Here's a module to convert MS Word documents using the program "catdoc":
     package SWISH::Filters::Doc2txt;
     use vars qw/ $VERSION /;
 
-    $VERSION = '0.02';
+    $VERSION = '0.11';
 
 
     sub new {

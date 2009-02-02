@@ -4,7 +4,7 @@ use Carp;
 
 use vars qw( $VERSION );
 
-$VERSION = '0.03';
+$VERSION = '0.11';
 
 =pod
 

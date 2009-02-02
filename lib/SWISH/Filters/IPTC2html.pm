@@ -3,7 +3,7 @@ use strict;
 use vars qw( $VERSION );
 use Image::IPTCInfo;
 
-$VERSION = '0.04';
+$VERSION = '0.11';
 
 sub new
 {
