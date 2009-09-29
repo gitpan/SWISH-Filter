@@ -4,37 +4,35 @@ use warnings;
 use Carp;
 
 use vars qw( $VERSION );
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 my %mimes = (
     'application/x-gzip' => 'gz',
 
-    #'application/x-compress' => 'zip',    # deferred till we have way to deal with
+    # deferred till we have way to deal with
     # multiple docs in single file
-            );
+    #'application/x-compress' => 'zip',
+);
 
 my %ext = reverse %mimes;
 
-sub new
-{
+sub new {
     my $class = shift;
-    my $self = bless({}, $class);
+    my $self = bless( {}, $class );
     my $ok;
 
     $self->{type} = 1;
 
     # set mimetypes etc. based on which modules/programs we have
     # preference is to use Perl lib over binary cmd
-    if ($self->use_modules(qw/ Compress::Zlib /))
-    {
-        push(@{$self->{mimetypes}}, qr!$ext{gz}!);
+    if ( $self->use_modules(qw/ Compress::Zlib /) ) {
+        push( @{ $self->{mimetypes} }, qr!$ext{gz}! );
         $self->{gz}->{perl}++;
         $ok++;
     }
-    elsif ($self->find_binary('gunzip'))
-    {
+    elsif ( $self->find_binary('gunzip') ) {
         $self->set_programs('gunzip');
-        push(@{$self->{mimetypes}}, qr!$ext{gz}!);
+        push( @{ $self->{mimetypes} }, qr!$ext{gz}! );
         $self->{gz}->{bin}++;
         $ok++;
     }
@@ -57,37 +55,32 @@ sub new
 }
 
 # TODO
-sub zipinfo
-{
+sub zipinfo {
     my $self  = shift;
     my $zfile = shift or croak "need zipfile";
-    my $i     = $self->run_program('unzip', "-Z -1 $zfile");
-    return split(/\n/, $i || '');
+    my $i     = $self->run_program( 'unzip', "-Z -1 $zfile" );
+    return split( /\n/, $i || '' );
 }
 
-sub get_type
-{
-    my ($self, $doc) = @_;
-    (my $name = $doc->name) =~ s/\.(gz|zip)$//i;
+sub get_type {
+    my ( $self, $doc ) = @_;
+    ( my $name = $doc->name ) =~ s/\.(gz|zip)$//i;
     $self->mywarn(" decompress: getting mime for $name");
     return $self->parent_filter->decode_content_type($name);
 }
 
-sub decompress
-{
-    my ($self, $doc) = @_;
+sub decompress {
+    my ( $self, $doc ) = @_;
 
-    my ($buf, $status);
+    my ( $buf, $status );
 
-    if ($self->{gz}->{perl})
-    {
+    if ( $self->{gz}->{perl} ) {
         my $r = $doc->fetch_doc_reference;
 
         $buf = Compress::Zlib::memGunzip($$r);
     }
-    elsif ($self->{gz}->{bin})
-    {
-        $buf = $self->run_program('gunzip', '-c', $doc->fetch_filename);
+    elsif ( $self->{gz}->{bin} ) {
+        $buf = $self->run_program( 'gunzip', '-c', $doc->fetch_filename );
     }
 
     $self->mywarn(" decompress: $doc was decompressed");
@@ -100,9 +93,8 @@ sub decompress
     return ref($buf) ? $buf : \$buf;
 }
 
-sub filter
-{
-    my ($self, $doc) = @_;
+sub filter {
+    my ( $self, $doc ) = @_;
 
     my $buf = $self->decompress($doc);    # returns scalar ref
 
@@ -110,13 +102,14 @@ sub filter
 
     my $mime = $self->get_type($doc);
 
-    $self->mywarn(" decompress: " . $doc->name . " is now flagged as $mime");
+    $self->mywarn(
+        " decompress: " . $doc->name . " is now flagged as $mime" );
 
     $doc->set_content_type($mime);
     $doc->set_continue(1);
 
     # return the document
-    return ($buf,$doc->meta_data);
+    return ( $buf, $doc->meta_data );
 }
 
 1;

@@ -2,26 +2,24 @@ package SWISH::Filters::xls2txt;
 use strict;
 use vars qw/ $VERSION /;
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
-sub new
-{
+sub new {
     my $class = shift;
-    my $self = bless {
-            mimetypes => [qr!application/vnd.ms-excel!, qr!application/excel!,],
-            priority  => 55,                            # higher than XLtoHTML
-                     }, $class;
+    my $self  = bless {
+        mimetypes => [ qr!application/vnd.ms-excel!, qr!application/excel!, ],
+        priority  => 55,                             # higher than XLtoHTML
+    }, $class;
 
     # check for helpers
     return $self->set_programs('xls2csv');
 
 }
 
-sub filter
-{
-    my ($self, $doc) = @_;
+sub filter {
+    my ( $self, $doc ) = @_;
 
-    my $content = $self->run_xls2csv($doc->fetch_filename) || return;
+    my $content = $self->run_xls2csv( $doc->fetch_filename ) || return;
 
     # update the document's content type
     $doc->set_content_type('text/plain');

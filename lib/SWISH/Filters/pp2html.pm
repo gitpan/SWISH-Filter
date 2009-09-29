@@ -1,45 +1,41 @@
 package SWISH::Filters::pp2html;
 use strict;
 use vars qw( $VERSION );
-$VERSION = '0.11';
+$VERSION = '0.12';
 require File::Spec;
 
-sub new
-{
+sub new {
     my ($class) = @_;
-    my $self = bless {mimetypes => [qr!application/vnd.ms-powerpoint!],},
-      $class;
+    my $self = bless { mimetypes => [qr!application/vnd.ms-powerpoint!], },
+        $class;
     return $self->set_programs('ppthtml');
 }
 
-sub filter
-{
-    my ($self, $doc) = @_;
-    my $content = $self->run_ppthtml($doc->fetch_filename) || return;
+sub filter {
+    my ( $self, $doc ) = @_;
+    my $content = $self->run_ppthtml( $doc->fetch_filename ) || return;
 
     # use just the file name as title with no path
-    my ($title) = ($content =~ m!<title>(.*?)</title>!io);
-    my ($volume, $directories, $file) = File::Spec->splitpath($title);
-    my $meta    = $doc->meta_data || {};
+    my ($title) = ( $content =~ m!<title>(.*?)</title>!io );
+    my ( $volume, $directories, $file ) = File::Spec->splitpath($title);
+    my $meta = $doc->meta_data || {};
     my $headers = $self->format_meta_headers($meta);
 
     $meta->{title} = $file;
     $file = $self->escapeXML($file);
     $content =~ s,<title>.*?</title>,<title>$file</title>,i;
 
-    if ($content =~ m/<head>/i)
-    {
+    if ( $content =~ m/<head>/i ) {
         $content =~ s/<head>/<head>$headers/i;
     }
-    else
-    {
+    else {
         $content =~ s/<title>/$headers\n<title>/i;
     }
 
     # update the document's content type
     $doc->set_content_type('text/html');
 
-    return (\$content, $meta);
+    return ( \$content, $meta );
 }
 
 1;

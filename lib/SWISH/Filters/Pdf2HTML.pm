@@ -3,29 +3,27 @@ use strict;
 
 use vars qw( $VERSION );
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
-sub new
-{
+sub new {
     my ($class) = @_;
 
-    my $self = bless {mimetypes => [qr!application/pdf!],}, $class;
+    my $self = bless { mimetypes => [qr!application/pdf!], }, $class;
 
     return $self->set_programs(qw/ pdftotext pdfinfo /);
 }
 
-sub filter
-{
-    my ($self, $doc) = @_;
+sub filter {
+    my ( $self, $doc ) = @_;
 
     my $user_data = $doc->user_data;
-    my $title_tag =
-      ref $user_data eq 'HASH'
-      ? $user_data->{pdf}{title_tag}
-      : 'title';
+    my $title_tag
+        = ref $user_data eq 'HASH'
+        ? $user_data->{pdf}{title_tag}
+        : 'title';
 
     my $user_meta = $doc->meta_data || {};
-    my $file      = $doc->fetch_filename;
+    my $file = $doc->fetch_filename;
 
     $self->mywarn("Pdf2HTML handling $file");
 
@@ -36,9 +34,8 @@ sub filter
 
     my $headers = $self->format_meta_headers($metadata);
 
-    if ($title_tag && exists $metadata->{$title_tag})
-    {
-        my $title = $self->escapeXML($metadata->{$title_tag});
+    if ( $title_tag && exists $metadata->{$title_tag} ) {
+        my $title = $self->escapeXML( $metadata->{$title_tag} );
 
         $headers = "<title>$title</title>\n" . $headers;
     }
@@ -49,13 +46,12 @@ sub filter
 
     # patch provided by Martial Chartoire
     if (   $metadata->{encrypted}
-        && $metadata->{encrypted} =~ /yes\.*\scopy:no\s\.*/i)
+        && $metadata->{encrypted} =~ /yes\.*\scopy:no\s\.*/i )
     {
         $content_ref = \'';
 
     }
-    else
-    {
+    else {
         $content_ref = $self->get_pdf_content_ref($file);
     }
 
@@ -75,14 +71,13 @@ $$content_ref
 </html>
 EOF
 
-    return (\$txt, $metadata);
+    return ( \$txt, $metadata );
 
 }
 
-sub get_pdf_headers
-{
+sub get_pdf_headers {
 
-    my ($self, $file) = @_;
+    my ( $self, $file ) = @_;
 
     # We need a file name to pass to the pdf conversion programs
 
@@ -90,11 +85,9 @@ sub get_pdf_headers
     my $headers = $self->run_pdfinfo($file);
     return \%metadata unless $headers;
 
-    for (split /\n/, $headers)
-    {
-        if (/^\s*([^:]+):\s+(.+)$/)
-        {
-            my ($metaname, $value) = (lc($1), $2);
+    for ( split /\n/, $headers ) {
+        if (/^\s*([^:]+):\s+(.+)$/) {
+            my ( $metaname, $value ) = ( lc($1), $2 );
             $metaname =~ tr/ /_/;
             $metadata{$metaname} = $value;
         }
@@ -103,11 +96,10 @@ sub get_pdf_headers
     return \%metadata;
 }
 
-sub get_pdf_content_ref
-{
-    my ($self, $file) = @_;
+sub get_pdf_content_ref {
+    my ( $self, $file ) = @_;
 
-    my $content = $self->escapeXML($self->run_pdftotext($file, '-'));
+    my $content = $self->escapeXML( $self->run_pdftotext( $file, '-' ) );
 
     return \$content;
 }

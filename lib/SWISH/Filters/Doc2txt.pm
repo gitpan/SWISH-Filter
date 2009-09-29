@@ -2,23 +2,22 @@ package SWISH::Filters::Doc2txt;
 use strict;
 use vars qw/ $VERSION /;
 
-$VERSION = '0.11';
-
+$VERSION = '0.12';
 
 sub new {
-    my ( $class ) = @_;
+    my ($class) = @_;
 
     my $self = bless {
-        mimetypes   => [ qr!application/(x-)?msword! ], # list of types this filter handles
-        priority    => 50,  # Make this a higher number (lower priority than the wvware filter
+        mimetypes => [qr!application/(x-)?msword!]
+        ,    # list of types this filter handles
+        priority => 50
+        ,   # Make this a higher number (lower priority than the wvware filter
     }, $class;
 
-
     # check for helpers
-    return $self->set_programs( 'catdoc' );
+    return $self->set_programs('catdoc');
 
 }
-
 
 sub filter {
     my ( $self, $doc ) = @_;
@@ -26,7 +25,7 @@ sub filter {
     my $content = $self->run_catdoc( $doc->fetch_filename ) || return;
 
     # update the document's content type
-    $doc->set_content_type( 'text/plain' );
+    $doc->set_content_type('text/plain');
 
     # return the document
     return \$content;

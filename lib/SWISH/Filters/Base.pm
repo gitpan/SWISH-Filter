@@ -4,7 +4,7 @@ use Carp;
 
 use vars qw( $VERSION );
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 =pod
 
@@ -27,10 +27,9 @@ You B<must> override this method in your filter subclass.
 
 =cut
 
-sub filter
-{
-    my $class = ref(shift(@_)); 
-    croak "$class must implement a filter() method" 
+sub filter {
+    my $class = ref( shift(@_) );
+    croak "$class must implement a filter() method";
 }
 
 =head2 parent_filter
@@ -40,8 +39,7 @@ a subsequent MIME type, for example. See SWISH::Filters::Decompress for an examp
 
 =cut
 
-sub parent_filter
-{
+sub parent_filter {
     return $_[0]->{parent_filter};
 }
 
@@ -84,16 +82,15 @@ Returns the list of mimetypes (as regular expressions) set for the filter.
 
 =cut
 
-sub mimetypes
-{
+sub mimetypes {
     my $self = shift;
     croak "Filter [$self] failed to set 'mimetypes' in new() constructor\n"
-      if !$self->{mimetypes};
+        if !$self->{mimetypes};
 
     croak "Filter [$self] 'mimetypes' entry is not an array reference\n"
-      unless ref $self->{mimetypes} eq 'ARRAY';
+        unless ref $self->{mimetypes} eq 'ARRAY';
 
-    return @{$self->{mimetypes}};
+    return @{ $self->{mimetypes} };
 }
 
 =head2 can_filter_mimetype( I<content_type> )
@@ -103,14 +100,12 @@ Returns the pattern that matched.
 
 =cut
 
-sub can_filter_mimetype
-{
-    my ($self, $content_type) = @_;
+sub can_filter_mimetype {
+    my ( $self, $content_type ) = @_;
 
     croak "Must supply content_type to can_filter_mimetype()"
-      unless $content_type;
-    for my $pattern ($self->mimetypes)
-    {
+        unless $content_type;
+    for my $pattern ( $self->mimetypes ) {
         return $pattern if $content_type =~ /$pattern/;
     }
     return;
@@ -123,8 +118,7 @@ variable.
 
 =cut
 
-sub mywarn
-{
+sub mywarn {
     my $self = shift;
 
     print STDERR "Filter: $self: ", @_, "\n" if $ENV{FILTER_DEBUG};
@@ -150,26 +144,24 @@ Then in your filter() method:
 
 =cut
 
-sub set_programs
-{
-    my ($self, @progs) = @_;
+sub set_programs {
+    my ( $self, @progs ) = @_;
 
-    for my $prog (@progs)
-    {
+    for my $prog (@progs) {
         my $path = $self->find_binary($prog);
-        unless ($path)
-        {
+        unless ($path) {
             $self->mywarn(
                 "Can not use Filter: failed to find $prog.  Maybe need to install?"
             );
             return;
         }
 
-        no strict 'refs';
-        *{"run_$prog"} = sub {
-            my $self = shift;
-            return $self->run_program($path, @_);    # closure
-        };
+        if ( !$self->can("run_${prog}") ) {
+            no strict 'refs';
+            *{"run_$prog"} = sub {
+                return shift->run_program( $path, @_ );    # closure
+            };
+        }
     }
 
     return $self;
@@ -186,33 +178,28 @@ Returns undefined otherwise.
 use Config;
 my @path_segments;
 
-sub find_binary
-{
-    my ($self, $prog) = @_;
+sub find_binary {
+    my ( $self, $prog ) = @_;
 
-    unless (@path_segments)
-    {
+    unless (@path_segments) {
         my $path_sep = $Config{path_sep} || ':';
 
         @path_segments = split /\Q$path_sep/, $ENV{PATH};
 
-        if (my $libexecdir = get_libexec())
-        {
+        if ( my $libexecdir = get_libexec() ) {
             push @path_segments, $libexecdir;
         }
     }
 
-    $self->mywarn("Find path of [$prog] in " . join ':', @path_segments);
+    $self->mywarn( "Find path of [$prog] in " . join ':', @path_segments );
 
-    for (@path_segments)
-    {
+    for (@path_segments) {
         my $path = "$_/$prog";
 
-        # For buggy Windows98 that accepts forward slashes if the filename isn't too long
+# For buggy Windows98 that accepts forward slashes if the filename isn't too long
         $path =~ s[/][\\]g if $^O =~ /Win32/;
 
-        if (-x $path)
-        {
+        if ( -x $path ) {
 
             $self->mywarn(" * Found program at: [$path]\n");
             return $path;
@@ -220,13 +207,11 @@ sub find_binary
         $self->mywarn("  Not found at path [$path]");
 
         # ok, try Windows extenstions
-        if ($^O =~ /Win32/)
-        {
-            for my $extension (qw/ exe bat /)
-            {
-                if (-x "$path.$extension")
-                {
-                    $self->mywarn(" * Found program at: [$path.$extension]\n");
+        if ( $^O =~ /Win32/ ) {
+            for my $extension (qw/ exe bat /) {
+                if ( -x "$path.$extension" ) {
+                    $self->mywarn(
+                        " * Found program at: [$path.$extension]\n");
                     return "$path.$extension";
                 }
                 $self->mywarn("  Not found at path [$path.$extension]");
@@ -243,8 +228,7 @@ sub find_binary
 # but that could break if a new (another) swish install was done since the registry
 # would then point to the new install location.
 
-sub get_libexec
-{
+sub get_libexec {
 
     # karman changed to return just 'swish-e' and rely on PATH to find it
     return 'swish-e';
@@ -266,21 +250,18 @@ Returns C<$self> on success.
 
 =cut
 
-sub use_modules
-{
-    my ($self, @modules) = @_;
+sub use_modules {
+    my ( $self, @modules ) = @_;
 
-    for my $mod (@modules)
-    {
+    for my $mod (@modules) {
         $self->mywarn("trying to load [$mod]");
 
         eval { eval "require $mod" or croak "$!\n" };
 
-        if ($@)
-        {
+        if ($@) {
             my $caller = caller();
             $self->mywarn(
-                      "Can not use Filter $caller -- need to install $mod: $@");
+                "Can not use Filter $caller -- need to install $mod: $@");
             return;
         }
 
@@ -309,20 +290,19 @@ be convertet to \n.
 
 =cut
 
-sub run_program
-{
+sub run_program {
     my $self = shift;
 
     croak "No arguments passed to run_program()\n"
-      unless @_;
+        unless @_;
 
     croak "Must pass arguments to program '$_[0]'\n"
-      unless @_ > 1;
+        unless @_ > 1;
 
-    my $fh =
-        $^O =~ /Win32/i || $^O =~ /VMS/i
-      ? $self->windows_fork(@_)
-      : $self->real_fork(@_);
+    my $fh
+        = $^O =~ /Win32/i || $^O =~ /VMS/i
+        ? $self->windows_fork(@_)
+        : $self->real_fork(@_);
 
     local $/ = undef;
     my $output = <$fh>;
@@ -340,42 +320,40 @@ sub run_program
 
 use Symbol;
 
-sub real_fork
-{
-    my ($self, @args) = @_;
+sub real_fork {
+    my ( $self, @args ) = @_;
 
     # Run swish
-    my $fh  = gensym;
-    my $pid = open($fh, '-|');
+    my $fh = gensym;
+    my $pid = open( $fh, '-|' );
 
     croak "Failed to fork: $!\n" unless defined $pid;
 
     return $fh if $pid;
 
-    delete $self->{temp_file};   # in child, so don't want to delete on destroy.
+    delete $self->{temp_file}; # in child, so don't want to delete on destroy.
 
-    exec @args or exit;          # die "Failed to exec '$args[0]': $!\n";
+    exec @args or exit;        # die "Failed to exec '$args[0]': $!\n";
 }
 
 #=====================================================================================
 # Need
 #
-sub windows_fork
-{
-    my ($self, @args) = @_;
+sub windows_fork {
+    my ( $self, @args ) = @_;
 
     require IPC::Open2;
-    my ($rdrfh, $wtrfh);
+    my ( $rdrfh, $wtrfh );
 
     my @command = map { s/"/\\"/g; qq["$_"] } @args;
 
-    my $pid = IPC::Open2::open2($rdrfh, $wtrfh, @command);
+    my $pid = IPC::Open2::open2( $rdrfh, $wtrfh, @command );
 
     # IPC::Open3 uses binmode for some reason (5.6.1)
     # Assume that the output from the program will be in text
     # Maybe an invalid assumption if running through a binary filter
 
-    binmode $rdrfh, ':crlf';   # perhpaps: unless delete $self->{binary_output};
+    binmode $rdrfh, ':crlf'; # perhpaps: unless delete $self->{binary_output};
 
     $self->{pid} = $pid;
 
@@ -389,17 +367,15 @@ characters. Returns the escaped string.
 
 =cut
 
-sub escapeXML
-{
+sub escapeXML {
     my $self = shift;
     my $str  = shift;
 
     return '' unless defined $str;
-    
+
     $str =~ s/[\x00-\x1f]/\n/go;    # converts all low chars to LF
-    
-    for ($str)
-    {
+
+    for ($str) {
         s/&/&amp;/go;
         s/"/&quot;/go;
         s/</&lt;/go;
@@ -420,17 +396,16 @@ run the risk of double-escaped text.
 
 =cut
 
-sub format_meta_headers
-{
+sub format_meta_headers {
     my $self = shift;
     my $m = shift or croak "need meta hash ref";
     croak "$m is not a hash ref" unless ref $m and ref $m eq 'HASH';
 
     my $metas = join "\n", map {
-            '<meta name="'
-          . $self->escapeXML($_)
-          . '" content="'
-          . $self->escapeXML($m->{$_}) . '"/>';
+              '<meta name="'
+            . $self->escapeXML($_)
+            . '" content="'
+            . $self->escapeXML( $m->{$_} ) . '"/>';
 
     } sort keys %$m;
 

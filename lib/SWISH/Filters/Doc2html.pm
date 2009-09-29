@@ -3,33 +3,29 @@ use strict;
 
 use vars qw( $VERSION );
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
-sub new
-{
+sub new {
     my ($class) = @_;
 
-    my $self = bless {mimetypes => [qr!application/(x-)?msword!],}, $class;
+    my $self = bless { mimetypes => [qr!application/(x-)?msword!], }, $class;
 
     return $self->set_programs('wvWare');
 }
 
-sub filter
-{
-    my ($self, $doc) = @_;
+sub filter {
+    my ( $self, $doc ) = @_;
 
     # Grab output from running program
-    my $content = $self->run_wvWare("-1", $doc->fetch_filename) || return;
+    my $content = $self->run_wvWare( "-1", $doc->fetch_filename ) || return;
 
-    my $meta    = $doc->meta_data || {};
+    my $meta = $doc->meta_data || {};
     my $headers = $self->format_meta_headers($meta);
 
-    if ($content =~ m/<head>/i)
-    {
+    if ( $content =~ m/<head>/i ) {
         $content =~ s/<head>/<head>$headers/i;
     }
-    else
-    {
+    else {
         $content =~ s/<title>/$headers\n<title>/i;
     }
 
@@ -37,7 +33,7 @@ sub filter
     $doc->set_content_type('text/html');
 
     # return the document
-    return (\$content, $meta);
+    return ( \$content, $meta );
 }
 1;
 

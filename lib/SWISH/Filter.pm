@@ -12,15 +12,14 @@ my $BaseFilterClass = 'SWISH::Filters::Base';
 
 use vars qw/ $VERSION %extra_methods /;
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 # Define the available parameters
 %extra_methods = map { $_ => 1 } qw( meta_data name user_data );
 
 # For testing only
 
-if ($0 =~ 'Filter.pm' && @ARGV >= 2 && shift =~ /^test/i)
-{
+if ( $0 =~ 'Filter.pm' && @ARGV >= 2 && shift =~ /^test/i ) {
     die "Please use the 'swish-filter-test' program.\n";
 }
 
@@ -143,27 +142,25 @@ Pass in a reference to a list of filter names to ignore.  For example, if you ha
 
 =cut
 
-sub new
-{
+sub new {
     my $class = shift;
     $class = ref($class) || $class;
 
-    my %attr = ref $_[0] ? %{$_[0]} : @_ if @_;
+    my %attr = ref $_[0] ? %{ $_[0] } : @_ if @_;
 
     my $self = bless {}, $class;
 
     $self->{skip_filters} = {};
 
-    $self->ignore_filters(delete $attr{ignore_filters})
-      if $attr{ignore_filters};
+    $self->ignore_filters( delete $attr{ignore_filters} )
+        if $attr{ignore_filters};
 
     warn "Unknown SWISH::Filter->new() config setting '$_'\n" for keys %attr;
 
     $self->create_filter_list(%attr);
 
     eval { require MIME::Types };
-    if ($@)
-    {
+    if ($@) {
         $class->mywarn(
             "Failed to load MIME::Types\n$@\nInstall MIME::Types for more complete MIME support"
         );
@@ -172,8 +169,7 @@ sub new
         $self->{mimetypes} = $self;
 
     }
-    else
-    {
+    else {
         $self->{mimetypes} = MIME::Types->new;
     }
 
@@ -184,40 +180,37 @@ sub new
 
 # Here's some common mime types
 my %mime_types = (
-                  doc  => 'application/msword',
-                  pdf  => 'application/pdf',
-                  ppt  => 'application/vnd.ms-powerpoint',
-                  html => 'text/html',
-                  htm  => 'text/html',
-                  txt  => 'text/plain',
-                  text => 'text/plain',
-                  xml  => 'text/xml',
-                  mp3  => 'audio/mpeg',
-                  gz   => 'application/x-gzip',
-                  xls  => 'application/vnd.ms-excel',
-                 );
+    doc  => 'application/msword',
+    pdf  => 'application/pdf',
+    ppt  => 'application/vnd.ms-powerpoint',
+    html => 'text/html',
+    htm  => 'text/html',
+    txt  => 'text/plain',
+    text => 'text/plain',
+    xml  => 'text/xml',
+    mp3  => 'audio/mpeg',
+    gz   => 'application/x-gzip',
+    xls  => 'application/vnd.ms-excel',
+);
 
-sub mimeTypeOf
-{
-    my ($self, $file) = @_;
+sub mimeTypeOf {
+    my ( $self, $file ) = @_;
     $file =~ s/.*\.//;
     return $mime_types{$file} || undef;
 }
 
-sub ignore_filters
-{
-    my ($self, $filters) = @_;
+sub ignore_filters {
+    my ( $self, $filters ) = @_;
 
-    unless ($filters)
-    {
+    unless ($filters) {
         return unless $self->{ignore_filter_list};
-        return @{$self->{ignore_filter_list}};
+        return @{ $self->{ignore_filter_list} };
     }
 
-    @{$self->{ignore_filter_list}} = @$filters;
+    @{ $self->{ignore_filter_list} } = @$filters;
 
     # create lookup hash for filters to skip
-    $self->{skip_filters} = {map { $_, 1 } @$filters};
+    $self->{skip_filters} = { map { $_, 1 } @$filters };
 }
 
 =head2 doc_class
@@ -229,8 +222,7 @@ C<SWISH::Filter::Document>.
 
 =cut
 
-sub doc_class
-{
+sub doc_class {
     return $_[0]->{doc_class};
 }
 
@@ -296,44 +288,38 @@ Example of using the convert() method:
 
 =cut
 
-sub convert
-{
+sub convert {
     my $self = shift;
-    my %attr = ref $_[0] ? %{$_[0]} : @_ if @_;
+    my %attr = ref $_[0] ? %{ $_[0] } : @_ if @_;
 
     # Any filters?
     return unless $self->filter_list;
 
     my $doc = delete $attr{document}
-      || die
-      "Failed to supply document attribute 'document' when calling filter()\n";
+        || die
+        "Failed to supply document attribute 'document' when calling filter()\n";
 
     my $content_type = delete $attr{content_type};
 
-    if (ref $content_type)
-    {
+    if ( ref $content_type ) {
         my $type = $self->decode_content_type($$content_type);
 
-        unless ($type)
-        {
+        unless ($type) {
             warn
-              "Failed to set content type for file reference '$$content_type'\n";
+                "Failed to set content type for file reference '$$content_type'\n";
             return;
         }
         $content_type = $type;
     }
 
-    if (ref $doc)
-    {
+    if ( ref $doc ) {
         die
-          "Must supply a content type when passing in a reference to a document\n"
-          unless $content_type;
+            "Must supply a content type when passing in a reference to a document\n"
+            unless $content_type;
     }
-    else
-    {
+    else {
         $content_type ||= $self->decode_content_type($doc);
-        unless ($content_type)
-        {
+        unless ($content_type) {
             warn "Failed to set content type for document '$doc'\n";
             return;
         }
@@ -342,70 +328,69 @@ sub convert
     }
 
     $self->mywarn(
-         "\n>> Starting to process new document: $attr{name} -> $content_type");
+        "\n>> Starting to process new document: $attr{name} -> $content_type"
+    );
 
     ## Create a new document object
 
-    my $doc_object = $self->doc_class->new($doc, $content_type);
+    my $doc_object = $self->doc_class->new( $doc, $content_type );
     return unless $doc_object;    # fails on empty doc or doc not readable
 
-    $self->_set_extra_methods($doc_object, {%attr});
+    $self->_set_extra_methods( $doc_object, {%attr} );
 
     # Now run through the filters
-    for my $filter ($self->filter_list)
-    {
+    for my $filter ( $self->filter_list ) {
 
         $self->mywarn(" ++Checking filter [$filter] for $content_type");
 
         # can this filter handle this content type?
-        next unless $filter->can_filter_mimetype($doc_object->content_type);
+        next unless $filter->can_filter_mimetype( $doc_object->content_type );
 
         my $start_content_type = $doc_object->content_type;
-        my ($filtered_doc, $metadata);
+        my ( $filtered_doc, $metadata );
 
         # run the filter
         eval {
             local $SIG{__DIE__};
-            ($filtered_doc, $metadata) = $filter->filter($doc_object);
+            ( $filtered_doc, $metadata ) = $filter->filter($doc_object);
         };
 
-        if ($@)
-        {
+        if ($@) {
             $self->mywarn(
-                   "Problems with filter '$filter'.  Filter disabled:\n -> $@");
-            $self->filter_list([grep { $_ != $filter } $self->filter_list]);
+                "Problems with filter '$filter'.  Filter disabled:\n -> $@");
+            $self->filter_list(
+                [ grep { $_ != $filter } $self->filter_list ] );
             next;
         }
 
-        $self->mywarn(  " ++ $content_type "
-                      . ($filtered_doc ? '*WAS*' : 'was not')
-                      . " filtered by $filter\n");
+        $self->mywarn( " ++ $content_type "
+                . ( $filtered_doc ? '*WAS*' : 'was not' )
+                . " filtered by $filter\n" );
 
         # save the working filters in this list
 
-        if ($filtered_doc)
-        {    # either a file name or a reference to the doc
+        if ($filtered_doc) {    # either a file name or a reference to the doc
 
             # Track chain of filters
 
-            push @{$doc_object->{filters_used}},
-              {
+            push @{ $doc_object->{filters_used} },
+                {
                 name               => $filter,
                 start_content_type => $start_content_type,
                 end_content_type   => $doc_object->content_type,
-              };
+                };
 
             # and save it (filename or reference)
             $doc_object->cur_doc($filtered_doc);
 
-            # set meta_data explicitly since %attr only has what we originally had
+        # set meta_data explicitly since %attr only has what we originally had
             $doc_object->set_meta_data($metadata);
             delete $attr{'meta_data'};
 
             # All done?
             last unless $doc_object->continue(0);
 
-            $self->_set_extra_methods($doc_object, {%attr});
+            $self->_set_extra_methods( $doc_object, {%attr} );
 
             $content_type = $doc_object->content_type();
         }
@@ -417,29 +402,26 @@ sub convert
 
 }
 
-sub _set_extra_methods
-{
-    my ($self, $doc_object, $attr) = @_;
+sub _set_extra_methods {
+    my ( $self, $doc_object, $attr ) = @_;
 
     local $SIG{__DIE__};
     local $SIG{__WARN__};
 
     # Look for left over config settings that we do not know about
 
-    for my $setting (keys %extra_methods)
-    {
+    for my $setting ( keys %extra_methods ) {
         next unless $attr->{$setting};
         my $method = "set_" . $setting;
-        $doc_object->$method(delete $attr->{$setting});
+        $doc_object->$method( delete $attr->{$setting} );
 
         # if given a document name then use that in error messages
 
-        if ($setting eq 'name')
-        {
-            $SIG{__DIE__} =
-              sub { die "$$ Error- ", $doc_object->name, ": ", @_ };
-            $SIG{__WARN__} =
-              sub { warn "$$ Warning - ", $doc_object->name, ": ", @_ };
+        if ( $setting eq 'name' ) {
+            $SIG{__DIE__}
+                = sub { die "$$ Error- ", $doc_object->name, ": ", @_ };
+            $SIG{__WARN__}
+                = sub { warn "$$ Warning - ", $doc_object->name, ": ", @_ };
         }
     }
 
@@ -455,8 +437,7 @@ running to see extra messages while processing.
 
 =cut
 
-sub mywarn
-{
+sub mywarn {
     my $self = shift;
 
     print STDERR @_, "\n" if $ENV{FILTER_DEBUG};
@@ -468,13 +449,11 @@ Returns a list of filter objects installed.
 
 =cut
 
-sub filter_list
-{
-    my ($self, $filter_ref) = @_;
+sub filter_list {
+    my ( $self, $filter_ref ) = @_;
 
-    unless ($filter_ref)
-    {
-        return ref $self->{filters} ? @{$self->{filters}} : ();
+    unless ($filter_ref) {
+        return ref $self->{filters} ? @{ $self->{filters} } : ();
     }
 
     $self->{filters} = $filter_ref;
@@ -482,27 +461,24 @@ sub filter_list
 
 # Creates the list of filters
 
-sub create_filter_list
-{
-    my ($self, %attr) = @_;
+sub create_filter_list {
+    my ( $self, %attr ) = @_;
 
     my @filters;
     my %seen;
 
     # Look for filters to load
-    for my $inc_path (@INC)
-    {
+    for my $inc_path (@INC) {
         my $cur_path = "$inc_path/SWISH/Filters";
 
-        next unless opendir(DIR, $cur_path);
+        next unless opendir( DIR, $cur_path );
 
-        while (my $file = readdir(DIR))
-        {
+        while ( my $file = readdir(DIR) ) {
             my $full_path = "$cur_path/$file";
 
             next unless -f $full_path;
 
-            my ($base, $path, $suffix) = fileparse($full_path, "\.pm");
+            my ( $base, $path, $suffix ) = fileparse( $full_path, "\.pm" );
 
             next if $base eq 'Base';    # our base class
 
@@ -519,10 +495,10 @@ sub create_filter_list
 
             eval "require $package";
 
-            if ($@)
-            {
-                $self->mywarn("Failed to load 'SWISH/Filters/${base}$suffix'\n",
-                              '-+' x 40, "\n", $@, '-+' x 40, "\n");
+            if ($@) {
+                $self->mywarn(
+                    "Failed to load 'SWISH/Filters/${base}$suffix'\n",
+                    '-+' x 40, "\n", $@, '-+' x 40, "\n" );
                 next;
             }
 
@@ -535,8 +511,8 @@ sub create_filter_list
             my $filter = $package->new(%attr);
 
             $self->mywarn(
-                   " Error: filter [SWISH/Filters/${base}$suffix] not loaded\n")
-              unless $filter;
+                " Error: filter [SWISH/Filters/${base}$suffix] not loaded\n")
+                unless $filter;
 
             next unless $filter;    # may not get installed
 
@@ -548,19 +524,15 @@ sub create_filter_list
         }
     }
 
-    unless (@filters)
-    {
+    unless (@filters) {
         warn "No SWISH filters found\n";
         return;
     }
 
     # Now sort the filters in order.
     $self->filter_list(
-        [
-         sort {
-                  $a->type <=> $b->type
-               || $a->priority <=> $b->priority
-           } @filters
+        [   sort { $a->type <=> $b->type || $a->priority <=> $b->priority }
+                @filters
         ]
     );
 }
@@ -576,30 +548,25 @@ Returns an array of filters that can handle this type of document
 
 my %can_filter = ();    # cache to avoid testing every time
 
-sub can_filter
-{
-    my ($self, $content_type) = @_;
+sub can_filter {
+    my ( $self, $content_type ) = @_;
 
     my @filters;
 
-    unless ($content_type)
-    {
+    unless ($content_type) {
         warn "Failed to pass in a content type to can_filter() method";
         return;
     }
 
     return ()
-      if exists $can_filter{$content_type} && !$can_filter{$content_type};
+        if exists $can_filter{$content_type} && !$can_filter{$content_type};
 
-    for my $filter ($self->filter_list)
-    {
-        if ($filter->can_filter_mimetype($content_type))
-        {
+    for my $filter ( $self->filter_list ) {
+        if ( $filter->can_filter_mimetype($content_type) ) {
             push @filters, $filter;
             $can_filter{$content_type}++;
         }
-        else
-        {
+        else {
             $can_filter{$content_type} = 0;
         }
     }
@@ -613,13 +580,12 @@ Returns MIME type for I<filename> if known.
 
 =cut
 
-sub decode_content_type
-{
-    my ($self, $file) = @_;
+sub decode_content_type {
+    my ( $self, $file ) = @_;
 
     return unless $file;
 
-    return ($self->{mimetypes})->mimeTypeOf($file);
+    return ( $self->{mimetypes} )->mimeTypeOf($file);
 }
 
 =head1 WRITING FILTERS
@@ -751,7 +717,7 @@ Here's a module to convert MS Word documents using the program "catdoc":
     package SWISH::Filters::Doc2txt;
     use vars qw/ $VERSION /;
 
-    $VERSION = '0.11';
+    $VERSION = '0.12';
 
 
     sub new {

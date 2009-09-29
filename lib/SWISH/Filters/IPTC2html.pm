@@ -3,10 +3,9 @@ use strict;
 use vars qw( $VERSION );
 use Image::IPTCInfo;
 
-$VERSION = '0.11';
+$VERSION = '0.12';
 
-sub new
-{
+sub new {
 
     my ($class) = @_;
     my $self = bless {
@@ -17,10 +16,9 @@ sub new
     return $self->use_modules(qw/ Image::IPTCInfo /);
 }
 
-sub filter
-{
+sub filter {
 
-    my ($self, $doc) = @_;
+    my ( $self, $doc ) = @_;
     my $file = $doc->fetch_filename;
 
     my $user_meta = $doc->meta_data || {};
@@ -35,13 +33,12 @@ sub filter
     my $caption = $info->Attribute('caption/abstract');
 
     # does it need escaping? silly test
-    if ($caption =~ m/[<>&]/)
-    {
+    if ( $caption =~ m/[<>&]/ ) {
         $caption = $self->escapeXML($caption);
     }
 
-    my $headers =
-      "<title>$caption</title>\n" . $self->format_meta_headers($user_meta);
+    my $headers = "<title>$caption</title>\n"
+        . $self->format_meta_headers($user_meta);
 
     # update the document's content type
     # uncommented set_content_type() to fix RT bug #20887
@@ -61,15 +58,15 @@ $xml
 EOF
 
     return (
-            \$txt,
-            {
-             title => $caption,
-             map { $_ => $user_meta->{$_} } keys %$user_meta
-            }
-           );
+        \$txt,
+        {   title => $caption,
+            map { $_ => $user_meta->{$_} } keys %$user_meta
+        }
+    );
 }
 
 1;
+
 __END__ 
 
 =head1 NAME
