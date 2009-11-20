@@ -12,11 +12,11 @@ diag("testing SWISH::Filter version $SWISH::Filter::VERSION");
 #
 
 diag("running the example script");
-
-ok(run("$^X example/swish-filter-test --quiet --noskip_binary t/test.*"), "example docs");
+my $sep = $^O =~ /Win32/ ? '\\' : '/';
+ok(run("$^X example${sep}swish-filter-test --quiet --noskip_binary t${sep}test.*"), "example docs");
 ok(
     run(
-        "$^X example/swish-filter-test --quiet --noskip_binary --ignore XLtoHTML --ignore pp2html t/test.*"
+        "$^X example${sep}swish-filter-test --quiet --noskip_binary --ignore XLtoHTML --ignore pp2html t${sep}test.*"
        ),
     "example docs using catdoc"
   );

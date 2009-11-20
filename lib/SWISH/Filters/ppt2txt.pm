@@ -2,7 +2,7 @@ package SWISH::Filters::ppt2txt;
 use strict;
 use vars qw/ $VERSION /;
 
-$VERSION = '0.12';
+$VERSION = '0.13';
 
 sub new {
     my $class = shift;

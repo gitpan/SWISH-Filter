@@ -53,3 +53,5 @@ Revision history for Perl extension SWISH::Filter.
         * avoid Subroutine redefined warnings in Base by checking if class 
           can() run_$program before creating a closure.
 
+0.13    19 Nov 2009
+        * fix path separator in tests to allow for Windows 
