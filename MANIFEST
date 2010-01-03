@@ -4,8 +4,11 @@ MANIFEST
 README
 example/swish-filter-test
 t/SWISH-Filter.t
+t/01-leak-test.t
+t/02-filters.t
 lib/SWISH/Filter.pm
 lib/SWISH/Filter/Document.pm
+lib/SWISH/Filter/MIMETypes.pm
 lib/SWISH/Filters/Base.pm
 lib/SWISH/Filters/Doc2html.pm
 lib/SWISH/Filters/Doc2txt.pm

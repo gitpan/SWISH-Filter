@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               SWISH-Filter
-version:            0.13
+version:            0.14
 abstract:           ~
 author:  []
 license:            unknown
@@ -10,12 +10,13 @@ configure_requires:
 build_requires:
     ExtUtils::MakeMaker:  0
 requires:
-    Data::Dumper:  0
-    Getopt::Long:  0
-    MIME::Types:   0
-    Pod::Usage:    0
-    Test::More:    0
-    URI:           0
+    Data::Dumper:       0
+    Getopt::Long:       0
+    MIME::Types:        0
+    Module::Pluggable:  0
+    Pod::Usage:         0
+    Test::More:         0
+    URI:                0
 no_index:
     directory:
         - t

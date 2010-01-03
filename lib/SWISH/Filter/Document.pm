@@ -6,15 +6,16 @@ use Symbol;
 
 use vars qw/ $VERSION $AUTOLOAD /;
 
-$VERSION = '0.13';
+$VERSION = '0.14';
 
 # Map content types to swish-e parsers.
 
 my %swish_parser_types = (
-                          'text/html'  => 'HTML*',
-                          'text/xml'   => 'XML*',
-                          'text/plain' => 'TXT*',
-                         );
+    'text/html'       => 'HTML*',
+    'text/xml'        => 'XML*',
+    'application/xml' => 'XML*',
+    'text/plain'      => 'TXT*',
+);
 
 =pod
 
@@ -46,32 +47,27 @@ file name or a reference to a scalar containing the document content.
 # Returns a new SWISH::Filter::document object
 # or null if just can't process the document
 
-sub new
-{
-    my ($class, $doc, $content_type) = @_;
+sub new {
+    my ( $class, $doc, $content_type ) = @_;
 
     return unless $doc && $content_type;
 
     my $self = bless {}, $class;
 
-    if (ref $doc)
-    {
-        unless (length $$doc)
-        {
+    if ( ref $doc ) {
+        unless ( length $$doc ) {
             warn "Empty document passed to filter\n";
             return;
         }
 
         croak
-          "Must supply a content type when passing in a reference to a document\n"
-          unless $content_type;
+            "Must supply a content type when passing in a reference to a document\n"
+            unless $content_type;
 
     }
-    else
-    {
+    else {
 
-        unless (-r $doc)
-        {
+        unless ( -r $doc ) {
             warn "Filter unable to read doc '$doc': $!\n";
             return;
         }
@@ -86,55 +82,49 @@ sub new
 
 # Clean up any temporary files
 
-sub DESTROY
-{
+sub DESTROY {
     my $self = shift;
     $self->remove_temp_file;
 }
 
-sub cur_doc
-{
-    my ($self, $doc_ref) = @_;
+sub cur_doc {
+    my ( $self, $doc_ref ) = @_;
     $self->{cur_doc} = $doc_ref if $doc_ref;
     return $self->{cur_doc};
 }
 
-sub remove_temp_file
-{
+sub remove_temp_file {
     my $self = shift;
 
-    unless ($ENV{FILTER_DEBUG})
-    {
+    unless ( $ENV{FILTER_DEBUG} ) {
         unlink delete $self->{temp_file} if $self->{temp_file};
     }
 }
 
 # Used for tracking what filter(s) were used in processing
 
-sub filters_used
-{
+sub filters_used {
     my $self = shift;
     return $self->{filters_used} || undef;
 }
 
-sub dump_filters_used
-{
+sub dump_filters_used {
     my $self = shift;
     my $used = $self->filters_used;
 
     local $SIG{__WARN__};
-    warn "\nFinal Content type for ", $self->name, " is ", $self->content_type,
-      "\n";
+    warn "\nFinal Content type for ", $self->name, " is ",
+        $self->content_type,
+        "\n";
 
-    unless ($used)
-    {
+    unless ($used) {
         warn "  *No filters were used\n";
         return;
     }
 
     warn
-      "  >Filter $_->{name} converted from [$_->{start_content_type}] to [$_->{end_content_type}]\n"
-      for @$used;
+        "  >Filter $_->{name} converted from [$_->{start_content_type}] to [$_->{end_content_type}]\n"
+        for @$used;
 }
 
 =head1 User Methods
@@ -156,13 +146,12 @@ Note that fetch_doc() is an alias.
 
 =cut
 
-sub fetch_doc_reference
-{
+sub fetch_doc_reference {
     my ($self) = @_;
 
     return ref $self->{cur_doc}    # just $self->read_file should work
-      ? $self->{cur_doc}
-      : $self->read_file;
+        ? $self->{cur_doc}
+        : $self->read_file;
 }
 
 # here's an alias for fetching a document reference.
@@ -175,8 +164,7 @@ Returns true if some filter processed the document
 
 =cut
 
-sub was_filtered
-{
+sub was_filtered {
     my $self = shift;
     return $self->filters_used ? 1 : 0;
 }
@@ -192,8 +180,7 @@ Example:
 
 =cut
 
-sub content_type
-{
+sub content_type {
     return $_[0]->{content_type} || '';
 }
 
@@ -204,16 +191,14 @@ if no parser type is mapped.
 
 =cut
 
-sub swish_parser_type
-{
+sub swish_parser_type {
     my $self = shift;
 
     my $content_type = $self->content_type || return;
 
-    for (keys %swish_parser_types)
-    {
+    for ( keys %swish_parser_types ) {
         return $swish_parser_types{$_}
-          if $content_type =~ /^\Q$_/;
+            if $content_type =~ /^\Q$_/;
     }
 
     return;
@@ -225,10 +210,9 @@ Returns true if the document's content-type does not match "text/".
 
 =cut
 
-sub is_binary
-{
+sub is_binary {
     my $self = shift;
-    return $self->content_type !~ m[^text];
+    return $self->content_type !~ m[^text|xml$];
 }
 
 =head1 Author Methods
@@ -252,13 +236,12 @@ This method is not normally used by end-users of SWISH::Filter.
 
 # This will create a temporary file if file is in memory
 
-sub fetch_filename
-{
+sub fetch_filename {
     my ($self) = @_;
 
     return ref $self->{cur_doc}
-      ? $self->create_temp_file
-      : $self->{cur_doc};
+        ? $self->create_temp_file
+        : $self->{cur_doc};
 }
 
 =head2 set_continue
@@ -268,15 +251,13 @@ This should be set for filters that change encodings or uncompress documents.
 
 =cut
 
-sub set_continue
-{
+sub set_continue {
     my ($self) = @_;
     return $self->continue(1);
 }
 
-sub continue
-{
-    my ($self, $continue) = @_;
+sub continue {
+    my ( $self, $continue ) = @_;
     my $old = $self->{continue} || 0;
     $self->{continue}++ if $continue;
     return $old;
@@ -288,21 +269,19 @@ Sets the content type for a document.
 
 =cut
 
-sub set_content_type
-{
-    my ($self, $type) = @_;
+sub set_content_type {
+    my ( $self, $type ) = @_;
     croak "Failed to pass in new content type\n" unless $type;
     $self->{content_type} = $type;
 }
 
-sub read_file
-{
+sub read_file {
     my $self = shift;
     my $doc  = $self->{cur_doc};
     return $doc if ref $doc;
 
     my $sym = gensym();
-    open($sym, "<$doc") or croak "Failed to open file '$doc': $!";
+    open( $sym, "<$doc" ) or croak "Failed to open file '$doc': $!";
     binmode $sym if $self->is_binary;
     local $/ = undef;
     my $content = <$sym>;
@@ -317,20 +296,19 @@ sub read_file
 
 # write file out to a temporary file
 
-sub create_temp_file
-{
+sub create_temp_file {
     my $self = shift;
     my $doc  = $self->{cur_doc};
 
     return $doc unless ref $doc;
 
-    my ($fh, $file_name) = File::Temp::tempfile();
+    my ( $fh, $file_name ) = File::Temp::tempfile();
 
     # assume binmode if we need to filter...
     binmode $fh if $self->is_binary;
 
     print $fh $$doc or croak "Failed to write to '$file_name': $!";
-    close $fh       or croak "Failed to close '$file_name' $!";
+    close $fh or croak "Failed to close '$file_name' $!";
 
     $self->{cur_doc}   = $file_name;
     $self->{temp_file} = $file_name;
@@ -398,21 +376,17 @@ Example:
 
 =cut
 
-
-sub AUTOLOAD
-{
-    my ($self, $newval) = @_;
+sub AUTOLOAD {
+    my ( $self, $newval ) = @_;
     no strict 'refs';
 
-    if ($AUTOLOAD =~ /.*::set_(\w+)/ && $SWISH::Filter::extra_methods{$1})
-    {
+    if ( $AUTOLOAD =~ /.*::set_(\w+)/ && $SWISH::Filter::extra_methods{$1} ) {
         my $attr_name = $1;
         *{$AUTOLOAD} = sub { $_[0]->{$attr_name} = $_[1]; return };
         return $self->{$attr_name} = $newval;
     }
 
-    elsif ($AUTOLOAD =~ /.*::(\w+)/ && $SWISH::Filter::extra_methods{$1})
-    {
+    elsif ( $AUTOLOAD =~ /.*::(\w+)/ && $SWISH::Filter::extra_methods{$1} ) {
         my $attr_name = $1;
         *{$AUTOLOAD} = sub { return $_[0]->{$attr_name} };
         return $self->{$attr_name};

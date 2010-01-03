@@ -2,9 +2,10 @@ package SWISH::Filters::Decompress;
 use strict;
 use warnings;
 use Carp;
-
-use vars qw( $VERSION );
-$VERSION = '0.13';
+use vars qw( $VERSION @ISA );
+$VERSION = '0.14';
+@ISA     = ('SWISH::Filters::Base');
+use SWISH::Filter::MIMETypes;
 
 my %mimes = (
     'application/x-gzip' => 'gz',
@@ -22,6 +23,8 @@ sub new {
     my $ok;
 
     $self->{type} = 1;
+
+    $self->{_mimetypes} = SWISH::Filter::MIMETypes->new;
 
     # set mimetypes etc. based on which modules/programs we have
     # preference is to use Perl lib over binary cmd
@@ -66,7 +69,7 @@ sub get_type {
     my ( $self, $doc ) = @_;
     ( my $name = $doc->name ) =~ s/\.(gz|zip)$//i;
     $self->mywarn(" decompress: getting mime for $name");
-    return $self->parent_filter->decode_content_type($name);
+    return $self->{_mimetypes}->get_mime_type($name);
 }
 
 sub decompress {
@@ -76,8 +79,7 @@ sub decompress {
 
     if ( $self->{gz}->{perl} ) {
         my $r = $doc->fetch_doc_reference;
-
-        $buf = Compress::Zlib::memGunzip($$r);
+        $buf = Compress::Zlib::memGunzip($r);
     }
     elsif ( $self->{gz}->{bin} ) {
         $buf = $self->run_program( 'gunzip', '-c', $doc->fetch_filename );

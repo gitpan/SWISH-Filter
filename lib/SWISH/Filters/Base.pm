@@ -1,10 +1,9 @@
 package SWISH::Filters::Base;
 use strict;
 use Carp;
-
 use vars qw( $VERSION );
 
-$VERSION = '0.13';
+$VERSION = '0.14';
 
 =pod
 
@@ -34,13 +33,12 @@ sub filter {
 
 =head2 parent_filter
 
-Returns the SWISH::Filter object used to invoke your filter. Useful if you need to get
-a subsequent MIME type, for example. See SWISH::Filters::Decompress for an example.
+This method is no longer supported.
 
 =cut
 
 sub parent_filter {
-    return $_[0]->{parent_filter};
+    croak "parent_filter is no longer supported";
 }
 
 =head2 type

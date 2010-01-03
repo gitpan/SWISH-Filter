@@ -9,6 +9,7 @@ WriteMakefile(
         'Pod::Usage'   => 0,
         'Data::Dumper' => 0,
         'MIME::Types'  => 0,
+        'Module::Pluggable' => 0,
 
 
     }, # e.g., Module::Name => 1.1

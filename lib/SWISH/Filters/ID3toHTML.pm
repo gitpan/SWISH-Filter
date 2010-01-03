@@ -1,7 +1,8 @@
 package SWISH::Filters::ID3toHTML;
 use strict;
-use vars qw( $VERSION );
-$VERSION = '0.13';
+use vars qw( $VERSION @ISA );
+$VERSION = '0.14';
+@ISA = ('SWISH::Filters::Base');
 
 # Convert known ID3v2 tags to metanames.
 
