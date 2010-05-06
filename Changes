@@ -62,3 +62,8 @@ Revision history for Perl extension SWISH::Filter.
         * add SWISH::Filter::MIMETypes to avoid some circular references, 
           deprecate parent_filter() method.
         * add Module::Pluggable as a dependency, to handle the *::Filters::* loading.
+
+0.15    05 May 2010
+        * can_filter() returned empty list sometimes when it shouldn't, so rewrote the memoization
+          logic. This may address past memory leaks as well.
+

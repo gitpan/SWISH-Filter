@@ -16,7 +16,7 @@ use Module::Pluggable
 
 use vars qw/ $VERSION %extra_methods /;
 
-$VERSION = '0.14';
+$VERSION = '0.15';
 
 # Define the available parameters
 %extra_methods = map { $_ => 1 } qw( meta_data name user_data );
@@ -434,8 +434,8 @@ sub filter_list {
 sub create_filter_list {
     my $self = shift;
     my %attr = @_;
-    
-    my @filters = grep { defined } $self->filters_found(%attr);
+
+    my @filters = grep {defined} $self->filters_found(%attr);
 
     unless (@filters) {
         warn "No SWISH filters found\n";
@@ -457,32 +457,30 @@ Returns an array of filters that can handle this type of document
 
 =cut
 
-my %can_filter = ();    # cache to avoid testing every time
+my %can_filter = ();    # memoize
 
 sub can_filter {
     my ( $self, $content_type ) = @_;
-
-    my @filters;
 
     unless ($content_type) {
         carp "Failed to pass in a content type to can_filter() method";
         return;
     }
 
-    return ()
-        if exists $can_filter{$content_type} && !$can_filter{$content_type};
+    if ( exists $can_filter{$content_type} ) {
+        return @{ $can_filter{$content_type} };
+    }
+    else {
+        $can_filter{$content_type} = [];
+    }
 
     for my $filter ( $self->filter_list ) {
         if ( $filter->can_filter_mimetype($content_type) ) {
-            push @filters, $filter;
-            $can_filter{$content_type}++;
-        }
-        else {
-            $can_filter{$content_type} = 0;
+            push @{ $can_filter{$content_type} }, $filter;
         }
     }
 
-    return @filters;
+    return @{ $can_filter{$content_type} };
 }
 
 =head2 decode_content_type( I<filename> )
@@ -628,7 +626,7 @@ Here's a module to convert MS Word documents using the program "catdoc":
     package SWISH::Filters::Doc2txt;
     use vars qw/ $VERSION /;
 
-    $VERSION = '0.14';
+    $VERSION = '0.15';
 
 
     sub new {

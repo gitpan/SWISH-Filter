@@ -6,7 +6,7 @@ use Symbol;
 
 use vars qw/ $VERSION $AUTOLOAD /;
 
-$VERSION = '0.14';
+$VERSION = '0.15';
 
 # Map content types to swish-e parsers.
 
