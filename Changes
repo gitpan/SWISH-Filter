@@ -67,3 +67,6 @@ Revision history for Perl extension SWISH::Filter.
         * can_filter() returned empty list sometimes when it shouldn't, so rewrote the memoization
           logic. This may address past memory leaks as well.
 
+0.16    10 Oct 2011
+        * added SWISH::Filters::JSON
+

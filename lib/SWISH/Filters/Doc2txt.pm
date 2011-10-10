@@ -1,7 +1,7 @@
 package SWISH::Filters::Doc2txt;
 use strict;
 use vars qw( $VERSION @ISA );
-$VERSION = '0.15';
+$VERSION = '0.16';
 @ISA = ('SWISH::Filters::Base');
 
 sub new {
