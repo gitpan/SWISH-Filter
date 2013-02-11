@@ -21,6 +21,7 @@ lib/SWISH/Filters/ppt2txt.pm
 lib/SWISH/Filters/xls2txt.pm
 lib/SWISH/Filters/Decompress.pm
 lib/SWISH/Filters/JSON.pm
+lib/SWISH/Filters/YAML.pm
 t/test.doc
 t/test.pdf
 t/test.ppt
@@ -33,3 +34,4 @@ t/test.pdf.gz
 t/test.ppt.gz
 t/test.xls.gz
 META.yml                                 Module meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)

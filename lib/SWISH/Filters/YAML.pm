@@ -1,4 +1,4 @@
-package SWISH::Filters::JSON;
+package SWISH::Filters::YAML;
 use strict;
 use vars qw( $VERSION @ISA );
 $VERSION = '0.17';
@@ -7,18 +7,23 @@ use Data::Dump qw( dump );
 
 sub new {
     my ($class) = @_;
-    my $self = bless { mimetypes => [qr!application/json!], }, $class;
-    return $self->use_modules(qw( JSON Search::Tools::XML ));
+    my $self = bless {
+        mimetypes => [
+            qr!application/x-yaml!, qr!application/yaml!,
+            qr!text/yaml!,          qr!text/x-yaml!
+        ],
+    }, $class;
+    return $self->use_modules(qw( YAML Search::Tools::XML ));
 }
 
 sub filter {
     my ( $self, $doc ) = @_;
 
     # get the raw content
-    my $json = $doc->fetch_doc_reference;
+    my $yaml = $doc->fetch_doc_reference;
 
     # convert to perl
-    my $perl = JSON::decode_json($$json);
+    my $perl = YAML::Load($$yaml);
 
     # convert to XML
     my $xml = Search::Tools::XML->perl_to_xml( $perl, 'doc', 1 );
@@ -38,13 +43,13 @@ __END__
 
 =head1 NAME
 
-SWISH::Filters::JSON - JSON to XML filter module
+SWISH::Filters::YAML - YAML to XML filter module
 
 =head1 DESCRIPTION
 
-SWISH::Filters::JSON converts JSON-encoded text to valid XML.
+SWISH::Filters::YAML converts YAML-encoded text to valid XML.
 
-Requires CPAN modules L<JSON> and L<Search::Tools::XML>.
+Requires CPAN modules L<YAML> and L<Search::Tools::XML>.
 
 =head1 AUTHOR
 

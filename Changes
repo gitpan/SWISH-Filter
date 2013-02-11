@@ -70,3 +70,6 @@ Revision history for Perl extension SWISH::Filter.
 0.16    10 Oct 2011
         * added SWISH::Filters::JSON
 
+0.17    10 Feb 2013
+        * added SWISH::Filters::YAML
+
