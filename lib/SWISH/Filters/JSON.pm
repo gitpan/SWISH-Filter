@@ -1,14 +1,14 @@
 package SWISH::Filters::JSON;
 use strict;
 use vars qw( $VERSION @ISA );
-$VERSION = '0.17';
+$VERSION = '0.18';
 @ISA     = ('SWISH::Filters::Base');
 use Data::Dump qw( dump );
 
 sub new {
     my ($class) = @_;
     my $self = bless { mimetypes => [qr!application/json!], }, $class;
-    return $self->use_modules(qw( JSON Search::Tools::XML ));
+    return $self->use_modules( 'JSON', ['Search::Tools::XML' => '0.88'], );
 }
 
 sub filter {
@@ -21,7 +21,12 @@ sub filter {
     my $perl = JSON::decode_json($$json);
 
     # convert to XML
-    my $xml = Search::Tools::XML->perl_to_xml( $perl, 'doc', 1 );
+    my $xml = Search::Tools::XML->perl_to_xml(
+        $perl,
+        {   root       => 'doc',
+            wrap_array => 0,
+        },
+    );
 
     #warn sprintf("xml: %s\n", Search::Tools::XML->tidy($xml));
 

@@ -17,16 +17,19 @@ else {
 # class data (caches from MIME::Types if available)
 my %mime_types = (
     doc  => 'application/msword',
+    gz   => 'application/x-gzip',
+    htm  => 'text/html',
+    html => 'text/html',
+    json => 'application/json',
+    mp3  => 'audio/mpeg',
     pdf  => 'application/pdf',
     ppt  => 'application/vnd.ms-powerpoint',
-    html => 'text/html',
-    htm  => 'text/html',
-    txt  => 'text/plain',
     text => 'text/plain',
-    xml  => 'text/xml',
-    mp3  => 'audio/mpeg',
-    gz   => 'application/x-gzip',
+    txt  => 'text/plain',
     xls  => 'application/vnd.ms-excel',
+    xml  => 'text/xml',
+    yaml => 'text/x-yaml',
+    yml  => 'text/x-yaml',
     zip  => 'application/zip',
 );
 

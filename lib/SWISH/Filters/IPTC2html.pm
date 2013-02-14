@@ -2,7 +2,7 @@ package SWISH::Filters::IPTC2html;
 use strict;
 use warnings;
 use vars qw( $VERSION @ISA );
-$VERSION = '0.17';
+$VERSION = '0.18';
 @ISA     = ('SWISH::Filters::Base');
 
 sub new {

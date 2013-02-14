@@ -1,7 +1,7 @@
 package SWISH::Filters::YAML;
 use strict;
 use vars qw( $VERSION @ISA );
-$VERSION = '0.17';
+$VERSION = '0.18';
 @ISA     = ('SWISH::Filters::Base');
 use Data::Dump qw( dump );
 
@@ -13,7 +13,7 @@ sub new {
             qr!text/yaml!,          qr!text/x-yaml!
         ],
     }, $class;
-    return $self->use_modules(qw( YAML Search::Tools::XML ));
+    return $self->use_modules( 'YAML', ['Search::Tools::XML' => '0.88'], );
 }
 
 sub filter {
@@ -26,7 +26,12 @@ sub filter {
     my $perl = YAML::Load($$yaml);
 
     # convert to XML
-    my $xml = Search::Tools::XML->perl_to_xml( $perl, 'doc', 1 );
+    my $xml = Search::Tools::XML->perl_to_xml(
+        $perl,
+        {   root       => 'doc',
+            wrap_array => 0,
+        },
+    );
 
     #warn sprintf("xml: %s\n", Search::Tools::XML->tidy($xml));
 

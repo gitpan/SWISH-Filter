@@ -7,7 +7,7 @@ WriteMakefile(
         'URI'          => 0,
         'Getopt::Long' => 0,
         'Pod::Usage'   => 0,
-        'Data::Dumper' => 0,
+        'Data::Dump'   => 0,
         'MIME::Types'  => 0,
         'Module::Pluggable' => 0,
 

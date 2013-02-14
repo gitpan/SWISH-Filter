@@ -73,3 +73,8 @@ Revision history for Perl extension SWISH::Filter.
 0.17    10 Feb 2013
         * added SWISH::Filters::YAML
 
+0.18    13 Feb 2013
+        * Filters::Base->use_modules now supports required minimum version of supporting module
+        * YAML and JSON filters now require Search::Tools::XML 0.88 or newer
+        * added .yml and .json test files
+

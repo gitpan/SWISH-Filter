@@ -3,7 +3,7 @@ use strict;
 use Carp;
 use vars qw( $VERSION );
 
-$VERSION = '0.17';
+$VERSION = '0.18';
 
 =pod
 
@@ -240,6 +240,11 @@ Use to test and load required modules within a filter without aborting.
 
     return unless $self->use_modules( qw/ Spreadsheet::ParseExcel  HTML::Entities / );
 
+If the module name is an array reference, the first item is considered the module
+name and the second the minimum version required.
+
+    return unless $self->use_modules( [ 'Foo::Bar' => '0.123' ] );
+
 Returns undef if any module is unavailable.
 A warning message is displayed if the FILTER_DEBUG environment variable is true.
 
@@ -251,15 +256,31 @@ Returns C<$self> on success.
 sub use_modules {
     my ( $self, @modules ) = @_;
 
-    for my $mod (@modules) {
-        $self->mywarn("trying to load [$mod]");
+    for my $module (@modules) {
+        my $req_vers = 0;
+        my $mod;
+        if ( ref $module ) {
+            ( $mod, $req_vers ) = @$module;
+        }
+        else {
+            $mod = $module;
+        }
 
-        eval { eval "require $mod" or croak "$!\n" };
+        $self->mywarn("trying to load [$mod $req_vers]");
+
+        if ($req_vers) {
+            eval { eval "use $mod $req_vers"; die "$@\n" if $@; };
+        }
+        else {
+            eval { eval "require $mod" or die "$!\n" };
+        }
 
         if ($@) {
+            my $err    = $@;
             my $caller = caller();
             $self->mywarn(
-                "Can not use Filter $caller -- need to install $mod: $@");
+                "Can not use Filter $caller -- need to install $mod $req_vers: $err"
+            );
             return;
         }
 

@@ -22,6 +22,8 @@ lib/SWISH/Filters/xls2txt.pm
 lib/SWISH/Filters/Decompress.pm
 lib/SWISH/Filters/JSON.pm
 lib/SWISH/Filters/YAML.pm
+t/test.json
+t/test.yml
 t/test.doc
 t/test.pdf
 t/test.ppt
