@@ -1,7 +1,7 @@
 package SWISH::Filters::Pdf2HTML;
 use strict;
 use vars qw( $VERSION @ISA );
-$VERSION = '0.18';
+$VERSION = '0.190';
 @ISA = ('SWISH::Filters::Base');
 
 sub new {

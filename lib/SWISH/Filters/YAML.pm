@@ -1,7 +1,7 @@
 package SWISH::Filters::YAML;
 use strict;
 use vars qw( $VERSION @ISA );
-$VERSION = '0.18';
+$VERSION = '0.190';
 @ISA     = ('SWISH::Filters::Base');
 use Data::Dump qw( dump );
 
